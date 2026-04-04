@@ -28,6 +28,14 @@
   --red: #ff4d6a;
   --red-dim: #ff4d6a33;
 
+  /* Purple — object recognition metric */
+  --purple: #7c6aff;
+  --purple-dim: #7c6aff33;
+
+  /* Pink — emotional response metric */
+  --pink: #ff85c8;
+  --pink-dim: #ff85c833;
+
   /* Text hierarchy */
   --text-primary: #e8eaf0;
   --text-secondary: #8b90a0;
@@ -187,13 +195,10 @@ body {
 /* ============ VIEWS ============ */
 .view {
   display: none;
-  opacity: 0;
-  transition: opacity 0.4s ease;
 }
 
 .view--active {
   display: block;
-  opacity: 1;
 }
 
 /* ============ UPLOAD VIEW ============ */
@@ -508,6 +513,13 @@ body {
 
 .btn-analyze:active {
   transform: translateY(0);
+}
+
+.btn-analyze:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn-arrow {
