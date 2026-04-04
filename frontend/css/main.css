@@ -31,8 +31,8 @@
   /* Text hierarchy */
   --text-primary: #e8eaf0;
   --text-secondary: #8b90a0;
-  --text-dim: #4a4f62;
-  --dim: #2a2f3e;
+  --text-dim: #6b7190;
+  --dim: #363b4f;
 
   /* Typography */
   --font-display: 'Instrument Serif', Georgia, serif;
@@ -815,4 +815,14 @@ body {
   .app-header {
     padding: var(--space-md);
   }
+}
+
+/* ============ ACCESSIBILITY: Focus styles ============ */
+:focus-visible {
+  outline: 2px solid var(--phosphor);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
 }
