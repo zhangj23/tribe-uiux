@@ -405,3 +405,83 @@ SEVERITY: low
 DESCRIPTION: _jobs dict never pruned, grows indefinitely consuming memory.
 SUGGESTION: Add TTL-based cleanup on create_job(), cap at 100 jobs.
 ```
+
+### issue-039 — `merged` — HIGH
+```
+ISSUE: Chart.js axis labels use stale #4a4f62 color (fails WCAG AA)
+AGENT: A
+FILE: frontend/js/charts.js
+SEVERITY: high
+DESCRIPTION: Chart axis ticks hardcoded to pre-fix --text-dim value. Contrast ~2.2:1.
+SUGGESTION: Replace all #4a4f62 with #7d839c in charts.js.
+```
+
+### issue-040 — `merged` — LOW
+```
+ISSUE: Chart.js tooltip borderColor uses stale #2a2f3e
+AGENT: A
+FILE: frontend/js/charts.js
+SEVERITY: low
+DESCRIPTION: Tooltip border uses old --dim value, nearly invisible.
+SUGGESTION: Change to #363b4f (current --dim).
+```
+
+### issue-041 — `merged` — MEDIUM
+```
+ISSUE: .btn-analyze has no :disabled styles
+AGENT: A
+FILE: frontend/css/main.css
+SEVERITY: medium
+DESCRIPTION: Primary button looks active when disabled. No visual feedback.
+SUGGESTION: Add .btn-analyze:disabled with opacity, cursor, no shadow.
+```
+
+### issue-042 — `merged` — LOW
+```
+ISSUE: Two chart colors outside design system palette
+AGENT: A
+FILE: frontend/js/charts.js, frontend/css/main.css
+SEVERITY: low
+DESCRIPTION: #7c6aff and #ff85c8 not defined as CSS variables.
+SUGGESTION: Add --purple and --pink to :root.
+```
+
+### issue-043 — `merged` — LOW
+```
+ISSUE: View opacity transition never animates (dead CSS)
+AGENT: A
+FILE: frontend/css/main.css
+SEVERITY: low
+DESCRIPTION: opacity transition on display:none never fires; view-enter animation handles it.
+SUGGESTION: Remove dead opacity/transition from .view.
+```
+
+### issue-044 — `merged` — MEDIUM
+```
+ISSUE: No Cache-Control headers on static assets
+AGENT: B
+FILE: backend/app/main.py
+SEVERITY: medium
+DESCRIPTION: All CSS/JS served with no cache headers. Browser re-downloads every load.
+SUGGESTION: Add Cache-Control middleware for /css/ and /js/ paths.
+```
+
+### issue-045 — `merged` — MEDIUM
+```
+ISSUE: Chart.js fully loaded on upload page (62KB unused)
+AGENT: B
+FILE: frontend/index.html, frontend/js/charts.js
+SEVERITY: medium
+DESCRIPTION: Chart.js downloaded and parsed on every page load even though only used in results.
+SUGGESTION: Lazy-load Chart.js dynamically on first renderTimeseries call.
+```
+
+### issue-046 — `merged` — LOW
+```
+ISSUE: Missing meta description (SEO)
+AGENT: B
+FILE: frontend/index.html
+SEVERITY: low
+DESCRIPTION: No meta description tag. Lighthouse SEO score 0.9.
+SUGGESTION: Add meta description in head.
+```
