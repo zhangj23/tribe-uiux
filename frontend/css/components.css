@@ -151,13 +151,10 @@
   border: 1px solid var(--red);
   border-radius: var(--radius);
   padding: var(--space-md) var(--space-lg);
-  margin: var(--space-lg) var(--space-xl);
+  margin-top: var(--space-md);
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--red);
   display: none;
-}
-
-.error-banner.visible {
-  display: block;
+  width: 100%;
 }

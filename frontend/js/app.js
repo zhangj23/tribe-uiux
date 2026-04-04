@@ -10,11 +10,28 @@ const App = (() => {
 
   function init() {
     Upload.init();
-    BrainView.init();
 
     // New analysis button
     document.getElementById('newAnalysisBtn').addEventListener('click', () => {
       showUpload();
+    });
+
+    // Cancel button in processing view
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      Polling.stop();
+      BrainView.stopProcessingAnimation();
+      showUpload();
+    });
+
+    // Browser history navigation
+    window.addEventListener('popstate', (e) => {
+      const view = (e.state && e.state.view) || 'upload';
+      if (view === 'upload') {
+        Polling.stop();
+        BrainView.stopProcessingAnimation();
+        Upload.clearFile();
+        switchView('upload');
+      }
     });
 
     // Check backend health
@@ -27,6 +44,7 @@ const App = (() => {
     });
     const target = views[name];
     target.classList.add('view--active', 'view-enter');
+    history.pushState({ view: name }, '', '#' + name);
   }
 
   function showUpload() {
@@ -37,6 +55,7 @@ const App = (() => {
   }
 
   function startProcessing(jobId) {
+    Polling.resetProcessingUI();
     switchView('processing');
     BrainView.startProcessingAnimation();
     Polling.start(jobId);
@@ -65,13 +84,13 @@ const App = (() => {
         statusDot.style.background = data.model_loaded ? 'var(--phosphor)' : 'var(--cyan)';
       }
     } catch {
-      // Backend not reachable — that's fine during development
+      // Backend not reachable
     }
   }
 
   // Initialize on DOM ready
   document.addEventListener('DOMContentLoaded', init);
 
-  // Public API (used by other modules)
+  // Public API
   return { showUpload, startProcessing, showResults };
 })();

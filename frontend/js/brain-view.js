@@ -7,13 +7,17 @@ const BrainView = (() => {
   let activationData = null; // [timestep][vertex]
   let vertexPositions = null; // pre-computed 2D positions
   let currentTimestep = 0;
+  let initialized = false;
 
   function init() {
+    if (initialized) return;
     canvas = document.getElementById('brainCanvas');
+    if (!canvas) return;
     ctx = canvas.getContext('2d');
 
     // Generate vertex positions in a brain-shaped layout
     vertexPositions = generateBrainLayout(canvas.width, canvas.height);
+    initialized = true;
   }
 
   function generateBrainLayout(w, h) {

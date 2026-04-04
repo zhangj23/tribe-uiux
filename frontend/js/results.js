@@ -2,7 +2,12 @@
  * Render LLM analysis text and friction score.
  */
 const Results = (() => {
+  let sliderHandler = null;
+
   function render(jobData) {
+    // Lazy-init brain view on first render
+    BrainView.init();
+
     renderFrictionScore(jobData.friction_score);
     renderAnalysis(jobData.llm_analysis);
     renderBrain(jobData);
@@ -106,13 +111,20 @@ const Results = (() => {
     slider.max = maxStep;
     slider.value = 0;
 
-    slider.addEventListener('input', () => {
+    // Remove previous listener to avoid accumulation
+    if (sliderHandler) {
+      slider.removeEventListener('input', sliderHandler);
+    }
+
+    sliderHandler = () => {
       const step = parseInt(slider.value);
       BrainView.setTimestep(step);
       if (jobData.timestamps[step] !== undefined) {
         label.textContent = jobData.timestamps[step].toFixed(2) + 's';
       }
-    });
+    };
+
+    slider.addEventListener('input', sliderHandler);
   }
 
   return { render };
