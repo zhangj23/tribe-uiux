@@ -1,0 +1,8 @@
+{
+  "visual_processing": {"mean": 0.35, "std": 0.12},
+  "object_recognition": {"mean": 0.25, "std": 0.10},
+  "reading_language": {"mean": 0.20, "std": 0.08},
+  "attention_salience": {"mean": 0.30, "std": 0.11},
+  "cognitive_load": {"mean": 0.28, "std": 0.09},
+  "emotional_response": {"mean": 0.18, "std": 0.07}
+}

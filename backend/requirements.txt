@@ -1,0 +1,20 @@
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# Brain region mapping
+nilearn>=0.11.0
+numpy>=1.26.0
+
+# Media conversion
+ffmpeg-python>=0.2.0
+
+# LLM integration
+anthropic>=0.40.0
+
+# Settings
+pydantic-settings>=2.0.0
+
+# TRIBE v2 (install separately for real inference)
+# pip install git+https://github.com/facebookresearch/tribev2.git
