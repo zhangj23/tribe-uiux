@@ -582,6 +582,8 @@ body {
   gap: 1px;
   background: var(--dim);
   min-height: calc(100vh - 120px);
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 /* Panels */
@@ -666,6 +668,22 @@ body {
   background: var(--phosphor);
   cursor: pointer;
   box-shadow: 0 0 10px var(--phosphor-dim);
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--phosphor);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--phosphor-dim);
+  border: none;
+}
+
+.slider::-moz-range-track {
+  height: 3px;
+  background: var(--dim);
+  border-radius: 2px;
 }
 
 .brain-legend {
@@ -795,6 +813,15 @@ body {
 }
 
 /* ============ RESPONSIVE ============ */
+@media (max-width: 1024px) {
+  .results-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .panel--analysis {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 1200px) {
   .results-grid {
     grid-template-columns: 1fr;
@@ -814,6 +841,10 @@ body {
 
   .app-header {
     padding: var(--space-md);
+  }
+
+  .header-subtitle {
+    display: none;
   }
 }
 
