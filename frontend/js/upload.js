@@ -5,6 +5,14 @@
 const Upload = (() => {
   let selectedFile = null;
 
+  const ALLOWED_EXTENSIONS = [
+    '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif',
+    '.mp4', '.mov', '.avi', '.mkv', '.webm',
+    '.mp3', '.wav', '.ogg', '.flac', '.m4a',
+  ];
+
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+
   function init() {
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
@@ -61,7 +69,36 @@ const Upload = (() => {
     });
   }
 
+  function showUploadError(message) {
+    const errorEl = document.getElementById('uploadError');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+
+  function hideUploadError() {
+    const errorEl = document.getElementById('uploadError');
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+  }
+
+  function isAllowedFile(file) {
+    const name = file.name.toLowerCase();
+    return ALLOWED_EXTENSIONS.some(ext => name.endsWith(ext));
+  }
+
   function selectFile(file) {
+    hideUploadError();
+
+    if (!isAllowedFile(file)) {
+      showUploadError('Unsupported file type. Allowed: ' + ALLOWED_EXTENSIONS.join(', '));
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      showUploadError('File too large. Maximum size is 100 MB.');
+      return;
+    }
+
     selectedFile = file;
     const meta = document.getElementById('uploadMeta');
     const nameEl = document.getElementById('fileName');
@@ -73,13 +110,13 @@ const Upload = (() => {
 
     // Set icon based on type
     if (file.type.startsWith('image/')) {
-      iconEl.textContent = '🖼';
+      iconEl.textContent = '\u{1F5BC}';
     } else if (file.type.startsWith('video/')) {
-      iconEl.textContent = '🎬';
+      iconEl.textContent = '\u{1F3AC}';
     } else if (file.type.startsWith('audio/')) {
-      iconEl.textContent = '🎵';
+      iconEl.textContent = '\u{1F3B5}';
     } else {
-      iconEl.textContent = '◉';
+      iconEl.textContent = '\u25C9';
     }
 
     meta.style.display = 'flex';
@@ -89,9 +126,18 @@ const Upload = (() => {
     selectedFile = null;
     document.getElementById('uploadMeta').style.display = 'none';
     document.getElementById('fileInput').value = '';
+    hideUploadError();
   }
 
   async function uploadFile(file) {
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const btnText = analyzeBtn.querySelector('.btn-text');
+
+    // Guard against double-submit
+    analyzeBtn.disabled = true;
+    btnText.textContent = 'Uploading...';
+    hideUploadError();
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -109,7 +155,10 @@ const Upload = (() => {
       const data = await resp.json();
       App.startProcessing(data.job_id);
     } catch (err) {
-      alert('Upload error: ' + err.message);
+      showUploadError('Upload error: ' + err.message);
+      clearFile();
+      analyzeBtn.disabled = false;
+      btnText.textContent = 'Begin Analysis';
     }
   }
 

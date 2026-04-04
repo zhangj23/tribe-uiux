@@ -1,9 +1,10 @@
 /**
- * Job status polling — polls GET /api/jobs/{id} every 2 seconds.
+ * Job status polling -- polls GET /api/jobs/{id} every 2 seconds.
  */
 const Polling = (() => {
   let intervalId = null;
   let currentJobId = null;
+  let consecutiveErrors = 0;
 
   const STAGE_TITLES = {
     created: 'Initializing...',
@@ -19,6 +20,7 @@ const Polling = (() => {
 
   function start(jobId) {
     currentJobId = jobId;
+    consecutiveErrors = 0;
     poll(); // immediate first check
     intervalId = setInterval(poll, 2000);
   }
@@ -29,6 +31,23 @@ const Polling = (() => {
       intervalId = null;
     }
     currentJobId = null;
+    consecutiveErrors = 0;
+  }
+
+  function resetProcessingUI() {
+    const bar = document.getElementById('progressBar');
+    const pct = document.getElementById('progressPct');
+    const title = document.getElementById('processingTitle');
+    const stage = document.getElementById('progressStage');
+
+    if (bar) bar.style.width = '0%';
+    if (pct) pct.textContent = '0%';
+    if (title) title.textContent = 'Initializing...';
+    if (stage) stage.textContent = 'CREATED';
+
+    document.querySelectorAll('.stage').forEach((el) => {
+      el.classList.remove('active', 'done');
+    });
   }
 
   async function poll() {
@@ -39,6 +58,7 @@ const Polling = (() => {
       if (!resp.ok) throw new Error('Job not found');
 
       const job = await resp.json();
+      consecutiveErrors = 0;
       updateProcessingUI(job);
 
       if (job.status === 'completed') {
@@ -46,11 +66,21 @@ const Polling = (() => {
         App.showResults(job);
       } else if (job.status === 'failed') {
         stop();
-        alert('Analysis failed: ' + (job.error || 'Unknown error'));
+        const title = document.getElementById('processingTitle');
+        if (title) title.textContent = 'Analysis failed: ' + (job.error || 'Unknown error');
         App.showUpload();
       }
     } catch (err) {
       console.error('Polling error:', err);
+      consecutiveErrors++;
+
+      const title = document.getElementById('processingTitle');
+      if (consecutiveErrors >= 10) {
+        stop();
+        if (title) title.textContent = 'Connection lost. Please try again.';
+      } else if (consecutiveErrors >= 5) {
+        if (title) title.textContent = 'Connection lost. Retrying...';
+      }
     }
   }
 
@@ -81,5 +111,5 @@ const Polling = (() => {
     });
   }
 
-  return { start, stop };
+  return { start, stop, resetProcessingUI };
 })();
