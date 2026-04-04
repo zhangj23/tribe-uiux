@@ -323,3 +323,85 @@ SEVERITY: low
 DESCRIPTION: No favicon. Browser requests /favicon.ico and gets 404. Lighthouse flags console error.
 SUGGESTION: Add inline SVG favicon in <head>.
 ```
+
+## Round 4 (Post-Milestone Evaluation)
+
+### issue-031 — `merged` — MEDIUM
+```
+ISSUE: Compare flow has no file type/size validation for Design B
+AGENT: C
+FILE: frontend/js/compare.js
+SEVERITY: medium
+DESCRIPTION: selectFileB() accepts any file without checking extension or size.
+SUGGESTION: Add ALLOWED_EXTENSIONS and MAX_FILE_SIZE checks matching upload.js.
+```
+
+### issue-032 — `merged` — LOW
+```
+ISSUE: Compare error handler uses alert() instead of inline error UI
+AGENT: C
+FILE: frontend/js/compare.js
+SEVERITY: low
+DESCRIPTION: runComparison() catch block calls alert() instead of inline error banner.
+SUGGESTION: Add error-banner div and use showCompareError() pattern.
+```
+
+### issue-033 — `merged` — MEDIUM
+```
+ISSUE: Compare dual polling has no error limit — polls forever on network failure
+AGENT: C
+FILE: frontend/js/compare.js
+SEVERITY: medium
+DESCRIPTION: Dual polling silently retries forever with no error counter or user feedback.
+SUGGESTION: Add consecutive error counters, stop after 10 failures.
+```
+
+### issue-034 — `merged` — MEDIUM
+```
+ISSUE: Cancel button does not stop compare polling
+AGENT: C
+FILE: frontend/js/app.js, frontend/js/compare.js
+SEVERITY: medium
+DESCRIPTION: Cancel button calls Polling.stop() but not Compare.stopPolling().
+SUGGESTION: Wire cancel handler to also call Compare.stopPolling().
+```
+
+### issue-035 — `merged` — LOW
+```
+ISSUE: Compare processing view does not reset UI before starting
+AGENT: C
+FILE: frontend/js/compare.js
+SEVERITY: low
+DESCRIPTION: Compare doesn't call resetProcessingUI() so stale progress shows.
+SUGGESTION: Call Polling.resetProcessingUI() before switching to processing view.
+```
+
+### issue-036 — `merged` — LOW
+```
+ISSUE: Compare runCompareBtn stays disabled after successful comparison
+AGENT: C
+FILE: frontend/js/compare.js
+SEVERITY: low
+DESCRIPTION: Button state not restored in reset(), stays disabled after comparison.
+SUGGESTION: Reset button text and disabled state in Compare.reset().
+```
+
+### issue-037 — `merged` — MEDIUM
+```
+ISSUE: Upload filename used directly in save path (path traversal risk)
+AGENT: C
+FILE: backend/app/routers/upload.py, backend/app/routers/compare.py
+SEVERITY: medium
+DESCRIPTION: file.filename used directly in Path, allowing path traversal.
+SUGGESTION: Sanitize with re.sub and use only base name.
+```
+
+### issue-038 — `merged` — LOW
+```
+ISSUE: In-memory job store grows without bound (no cleanup)
+AGENT: C
+FILE: backend/app/services/job_manager.py
+SEVERITY: low
+DESCRIPTION: _jobs dict never pruned, grows indefinitely consuming memory.
+SUGGESTION: Add TTL-based cleanup on create_job(), cap at 100 jobs.
+```
