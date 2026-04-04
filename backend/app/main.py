@@ -1,9 +1,22 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+
+
+class CacheControlMiddleware(BaseHTTPMiddleware):
+    """Set Cache-Control on static assets (CSS/JS)."""
+
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        path = request.url.path
+        if path.startswith("/css/") or path.startswith("/js/"):
+            response.headers["Cache-Control"] = "public, max-age=3600"
+        return response
 
 from app.config import settings
 from app.routers import upload, jobs, health, analyze_url, compare
@@ -38,6 +51,7 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=500)
+app.add_middleware(CacheControlMiddleware)
 
 # API routes (must be registered before static files)
 app.include_router(health.router, prefix="/api")

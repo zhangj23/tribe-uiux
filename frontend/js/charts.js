@@ -3,6 +3,21 @@
  */
 const Charts = (() => {
   let timeseriesChart = null;
+  let chartJsLoaded = false;
+  let chartJsLoading = null;
+
+  function loadChartJs() {
+    if (chartJsLoaded) return Promise.resolve();
+    if (chartJsLoading) return chartJsLoading;
+    chartJsLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+      script.onload = () => { chartJsLoaded = true; resolve(); };
+      script.onerror = () => reject(new Error('Failed to load Chart.js'));
+      document.head.appendChild(script);
+    });
+    return chartJsLoading;
+  }
 
   const METRIC_CONFIG = {
     visual_processing: { label: 'Visual Processing', color: '#00d4ff' },
@@ -46,9 +61,11 @@ const Charts = (() => {
     return el;
   }
 
-  function renderTimeseries(timeseries, timestamps) {
+  async function renderTimeseries(timeseries, timestamps) {
     const ctx = document.getElementById('timeseriesChart');
     if (!ctx) return;
+
+    await loadChartJs();
 
     // Destroy previous chart
     if (timeseriesChart) {
@@ -100,7 +117,7 @@ const Charts = (() => {
             backgroundColor: '#191c25',
             titleColor: '#e8eaf0',
             bodyColor: '#8b90a0',
-            borderColor: '#2a2f3e',
+            borderColor: '#363b4f',
             borderWidth: 1,
             titleFont: { family: '"DM Mono", monospace', size: 11 },
             bodyFont: { family: '"DM Mono", monospace', size: 10 },
@@ -114,27 +131,27 @@ const Charts = (() => {
           x: {
             grid: { color: '#1e2130', lineWidth: 0.5 },
             ticks: {
-              color: '#4a4f62',
+              color: '#7d839c',
               font: { family: '"DM Mono", monospace', size: 9 },
               maxTicksLimit: 10,
             },
             title: {
               display: true,
               text: 'Time (s)',
-              color: '#4a4f62',
+              color: '#7d839c',
               font: { family: '"DM Mono", monospace', size: 10 },
             },
           },
           y: {
             grid: { color: '#1e2130', lineWidth: 0.5 },
             ticks: {
-              color: '#4a4f62',
+              color: '#7d839c',
               font: { family: '"DM Mono", monospace', size: 9 },
             },
             title: {
               display: true,
               text: 'Activation',
-              color: '#4a4f62',
+              color: '#7d839c',
               font: { family: '"DM Mono", monospace', size: 10 },
             },
           },
