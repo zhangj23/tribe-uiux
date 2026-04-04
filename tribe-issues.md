@@ -485,3 +485,45 @@ SEVERITY: low
 DESCRIPTION: No meta description tag. Lighthouse SEO score 0.9.
 SUGGESTION: Add meta description in head.
 ```
+
+## Round 5 (Post-Fix Re-evaluation)
+
+### issue-047 — `merged` — HIGH
+```
+ISSUE: CacheControlMiddleware doesn't apply to StaticFiles mounts
+AGENT: B
+FILE: backend/app/main.py
+SEVERITY: high
+DESCRIPTION: BaseHTTPMiddleware bypassed by Starlette mounted sub-apps. Cache headers never sent.
+SUGGESTION: Replace with CachedStaticFiles subclass overriding get_response().
+```
+
+### issue-048 — `merged` — MEDIUM
+```
+ISSUE: popstate handler does not stop compare polling intervals
+AGENT: C
+FILE: frontend/js/app.js
+SEVERITY: medium
+DESCRIPTION: Browser back during compare leaves orphan polling. Cancel button fixed but popstate not.
+SUGGESTION: Add Compare.stopPolling() to popstate handler.
+```
+
+### issue-049 — `merged` — LOW
+```
+ISSUE: Compare dual polling continues after one design fails
+AGENT: C
+FILE: frontend/js/compare.js
+SEVERITY: low
+DESCRIPTION: When one design fails, other polling continues indefinitely.
+SUGGESTION: Call stopPolling() in both fail branches to stop both intervals.
+```
+
+### issue-050 — `open` — LOW
+```
+ISSUE: main.css still render-blocking (483ms wasted)
+AGENT: B
+FILE: frontend/index.html
+SEVERITY: low
+DESCRIPTION: main.css is the sole remaining render-blocking resource. Diminishing returns to fix (perf score 91).
+SUGGESTION: Inline critical above-fold CSS and async-load full stylesheet. Low priority.
+```
