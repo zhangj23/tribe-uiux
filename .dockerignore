@@ -1,0 +1,14 @@
+.git
+.claude
+.vscode
+.idea
+__pycache__
+*.pyc
+node_modules
+cache/
+backend/cache/
+data/uploads/*
+tribe-screenshots/
+*.egg-info
+.env
+.env.local
