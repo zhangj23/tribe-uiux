@@ -6,10 +6,12 @@ const App = (() => {
     upload: document.getElementById('viewUpload'),
     processing: document.getElementById('viewProcessing'),
     results: document.getElementById('viewResults'),
+    compare: document.getElementById('viewCompare'),
   };
 
   function init() {
     Upload.init();
+    Compare.init();
 
     // New analysis button
     document.getElementById('newAnalysisBtn').addEventListener('click', () => {
@@ -43,15 +45,18 @@ const App = (() => {
       v.classList.remove('view--active', 'view-enter');
     });
     const target = views[name];
-    target.classList.add('view--active', 'view-enter');
-    const method = replace ? 'replaceState' : 'pushState';
-    history[method]({ view: name }, '', '#' + name);
+    if (target) {
+      target.classList.add('view--active', 'view-enter');
+      const method = replace ? 'replaceState' : 'pushState';
+      history[method]({ view: name }, '', '#' + name);
+    }
   }
 
   function showUpload() {
     Polling.stop();
     BrainView.stopProcessingAnimation();
     Upload.clearFile();
+    Compare.reset();
     switchView('upload');
   }
 
@@ -93,5 +98,5 @@ const App = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   // Public API
-  return { showUpload, startProcessing, showResults };
+  return { showUpload, startProcessing, showResults, switchView };
 })();

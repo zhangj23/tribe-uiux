@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app.config import settings
-from app.routers import upload, jobs, health, analyze_url
+from app.routers import upload, jobs, health, analyze_url, compare
 
 
 @asynccontextmanager
@@ -44,6 +44,7 @@ app.include_router(health.router, prefix="/api")
 app.include_router(upload.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(analyze_url.router, prefix="/api")
+app.include_router(compare.router, prefix="/api")
 
 # Serve frontend static files under /static path
 app.mount("/css", StaticFiles(directory=str(settings.frontend_dir / "css")), name="css")
