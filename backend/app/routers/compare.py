@@ -1,6 +1,8 @@
 """POST /api/analyze/compare — run two designs through the pipeline and compare."""
 
+import re
 import shutil
+import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException
@@ -46,7 +48,10 @@ async def compare_designs(
         else:
             media_type = "audio"
 
-        save_path = settings.upload_dir / f"compare_{label}_{file.filename}"
+        safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", Path(file.filename).name)
+        if not safe_name or safe_name.startswith("."):
+            safe_name = uuid.uuid4().hex[:12] + Path(file.filename).suffix.lower()
+        save_path = settings.upload_dir / f"compare_{label}_{safe_name}"
         with open(save_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 

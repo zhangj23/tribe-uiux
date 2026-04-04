@@ -42,7 +42,29 @@ class Job:
 _jobs: dict[str, Job] = {}
 
 
+MAX_JOBS = 100
+JOB_TTL_SECONDS = 1800  # 30 minutes
+
+
+def _cleanup_old_jobs():
+    """Remove completed/failed jobs older than TTL, or oldest if over MAX_JOBS."""
+    now = datetime.now(timezone.utc)
+    to_remove = []
+    for jid, job in _jobs.items():
+        age = (now - job.created_at).total_seconds()
+        if age > JOB_TTL_SECONDS and job.status in (COMPLETED, FAILED):
+            to_remove.append(jid)
+    for jid in to_remove:
+        del _jobs[jid]
+    # Hard cap: remove oldest if still over limit
+    if len(_jobs) > MAX_JOBS:
+        sorted_jobs = sorted(_jobs.items(), key=lambda x: x[1].created_at)
+        for jid, _ in sorted_jobs[: len(_jobs) - MAX_JOBS]:
+            del _jobs[jid]
+
+
 def create_job(media_type: str, input_path: Path) -> Job:
+    _cleanup_old_jobs()
     job_id = uuid.uuid4().hex[:12]
     job = Job(id=job_id, media_type=media_type, input_path=input_path)
     _jobs[job_id] = job
