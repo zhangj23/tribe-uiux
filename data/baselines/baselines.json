@@ -1,8 +1,44 @@
 {
-  "visual_processing": {"mean": 0.35, "std": 0.12},
-  "object_recognition": {"mean": 0.25, "std": 0.10},
-  "reading_language": {"mean": 0.20, "std": 0.08},
-  "attention_salience": {"mean": 0.30, "std": 0.11},
-  "cognitive_load": {"mean": 0.28, "std": 0.09},
-  "emotional_response": {"mean": 0.18, "std": 0.07}
+  "visual_processing": {
+    "mean": 0.021523,
+    "std": 0.010372,
+    "n_samples": 30,
+    "min": 0.003264,
+    "max": 0.039902
+  },
+  "object_recognition": {
+    "mean": -6.8e-05,
+    "std": 0.01,
+    "n_samples": 30,
+    "min": -0.006531,
+    "max": 0.004314
+  },
+  "reading_language": {
+    "mean": 0.00194,
+    "std": 0.01,
+    "n_samples": 30,
+    "min": -0.002623,
+    "max": 0.006908
+  },
+  "attention_salience": {
+    "mean": 0.006444,
+    "std": 0.01,
+    "n_samples": 30,
+    "min": 0.001482,
+    "max": 0.014154
+  },
+  "cognitive_load": {
+    "mean": 0.008369,
+    "std": 0.01,
+    "n_samples": 30,
+    "min": 0.003107,
+    "max": 0.018695
+  },
+  "emotional_response": {
+    "mean": 0.026656,
+    "std": 0.012759,
+    "n_samples": 30,
+    "min": 0.003857,
+    "max": 0.049227
+  }
 }
