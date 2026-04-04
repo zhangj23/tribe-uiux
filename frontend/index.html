@@ -115,6 +115,32 @@
           <span class="btn-text">Begin Analysis</span>
           <span class="btn-arrow">→</span>
         </button>
+        <button class="btn-compare" id="compareBtn">
+          <span class="btn-text">Compare with another design</span>
+        </button>
+      </div>
+
+      <!-- Compare second file (hidden until Compare clicked) -->
+      <div class="compare-upload" id="compareUpload" style="display:none">
+        <div class="compare-upload-label">Design B</div>
+        <div class="dropzone dropzone--small" id="dropzoneB">
+          <div class="dropzone-inner">
+            <p class="dropzone-text">Drop second file or <button class="dropzone-browse" id="browseBtnB">browse</button></p>
+          </div>
+          <input type="file" id="fileInputB" hidden accept="image/*,video/*,audio/*">
+        </div>
+        <div class="file-preview" id="filePreviewB" style="display:none">
+          <span class="file-icon" id="fileIconB">◉</span>
+          <div class="file-info">
+            <span class="file-name" id="fileNameB"></span>
+            <span class="file-size" id="fileSizeB"></span>
+          </div>
+          <button class="file-remove" id="fileRemoveB">×</button>
+        </div>
+        <button class="btn-analyze" id="runCompareBtn" disabled>
+          <span class="btn-text">Compare Designs</span>
+          <span class="btn-arrow">→</span>
+        </button>
       </div>
       <div class="error-banner" id="uploadError"></div>
     </div>
@@ -226,12 +252,53 @@
     </div>
   </main>
 
+  <!-- Comparison Results View -->
+  <main id="viewCompare" class="view">
+    <div class="results-header">
+      <h2 class="results-title">Comparison Complete</h2>
+      <button class="btn-new" id="newCompareBtn">+ New Analysis</button>
+    </div>
+    <div class="compare-grid">
+      <!-- Design A -->
+      <section class="compare-col">
+        <div class="compare-label">Design A</div>
+        <div class="compare-metrics" id="compareMetricsA"></div>
+        <div class="compare-friction" id="compareFrictionA">
+          <span class="compare-friction-num">--</span>
+          <span class="compare-friction-label">Friction</span>
+        </div>
+      </section>
+      <!-- Delta column -->
+      <section class="compare-col compare-col--delta">
+        <div class="compare-label">Delta</div>
+        <div class="compare-deltas" id="compareDeltas"></div>
+      </section>
+      <!-- Design B -->
+      <section class="compare-col">
+        <div class="compare-label">Design B</div>
+        <div class="compare-metrics" id="compareMetricsB"></div>
+        <div class="compare-friction" id="compareFrictionB">
+          <span class="compare-friction-num">--</span>
+          <span class="compare-friction-label">Friction</span>
+        </div>
+      </section>
+    </div>
+    <div class="compare-analysis" id="compareAnalysis">
+      <div class="panel-header">
+        <h3>Comparative Analysis</h3>
+        <span class="panel-badge">AI Summary</span>
+      </div>
+      <div class="analysis-text" id="compareAnalysisText"></div>
+    </div>
+  </main>
+
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script defer src="js/brain-view.js"></script>
   <script defer src="js/charts.js"></script>
   <script defer src="js/upload.js"></script>
   <script defer src="js/polling.js"></script>
   <script defer src="js/results.js"></script>
+  <script defer src="js/compare.js"></script>
   <script defer src="js/app.js"></script>
 </body>
 </html>
