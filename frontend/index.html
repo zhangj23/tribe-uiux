@@ -58,6 +58,27 @@
         <p class="upload-desc">Upload an image, video, or audio file to simulate cortical activation patterns and receive AI-driven UX recommendations.</p>
       </div>
 
+      <!-- Input mode toggle -->
+      <div class="input-toggle" id="inputToggle">
+        <button class="toggle-btn toggle-btn--active" data-mode="file" id="toggleFile">Upload File</button>
+        <button class="toggle-btn" data-mode="url" id="toggleUrl">Paste URL</button>
+      </div>
+
+      <!-- URL Input -->
+      <div class="url-input-wrap" id="urlInputWrap" style="display:none">
+        <div class="url-field">
+          <span class="url-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </span>
+          <input type="url" id="urlInput" class="url-text-input" placeholder="https://example.com" autocomplete="url">
+          <button class="btn-analyze-url" id="analyzeUrlBtn">
+            <span class="btn-text">Analyze</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+        <div class="error-banner" id="urlError"></div>
+      </div>
+
       <div class="dropzone" id="dropzone">
         <div class="dropzone-inner">
           <div class="dropzone-icon">
