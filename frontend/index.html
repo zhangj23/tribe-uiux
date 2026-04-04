@@ -6,10 +6,10 @@
   <title>TRIBE UX Analyzer — Neural Response Analysis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"></noscript>
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/components.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <!-- Scan-line overlay for CRT medical monitor feel -->
@@ -201,11 +201,12 @@
     </div>
   </main>
 
-  <script src="js/brain-view.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/upload.js"></script>
-  <script src="js/polling.js"></script>
-  <script src="js/results.js"></script>
-  <script src="js/app.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script defer src="js/brain-view.js"></script>
+  <script defer src="js/charts.js"></script>
+  <script defer src="js/upload.js"></script>
+  <script defer src="js/polling.js"></script>
+  <script defer src="js/results.js"></script>
+  <script defer src="js/app.js"></script>
 </body>
 </html>
