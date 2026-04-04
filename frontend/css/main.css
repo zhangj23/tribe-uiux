@@ -239,6 +239,111 @@ body {
   line-height: 1.7;
 }
 
+/* Input mode toggle */
+.input-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-raised);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 2px;
+  margin-bottom: var(--space-lg);
+}
+
+.toggle-btn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  color: var(--text-secondary);
+}
+
+.toggle-btn--active {
+  color: var(--bg-deep);
+  background: var(--phosphor);
+  font-weight: 500;
+}
+
+/* URL input */
+.url-input-wrap {
+  width: 100%;
+  margin-bottom: var(--space-lg);
+}
+
+.url-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-raised);
+  border: 1.5px solid var(--dim);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-sm) var(--space-sm) var(--space-md);
+  transition: border-color 0.3s;
+}
+
+.url-field:focus-within {
+  border-color: var(--phosphor);
+  box-shadow: 0 0 20px var(--phosphor-glow);
+}
+
+.url-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.url-text-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  padding: var(--space-sm) 0;
+}
+
+.url-text-input::placeholder {
+  color: var(--text-dim);
+}
+
+.btn-analyze-url {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: var(--phosphor);
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-analyze-url:hover {
+  box-shadow: 0 0 20px var(--phosphor-dim);
+}
+
+.btn-analyze-url:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Dropzone */
 .dropzone {
   width: 100%;
