@@ -9,7 +9,8 @@ build/
 .venv/
 venv/
 env/
-
+node_modules/
+tribe-screenshots/
 # Data
 data/uploads/
 data/cache/
@@ -30,3 +31,7 @@ Thumbs.db
 
 # Model cache
 cache/
+backend/cache/
+
+# TRIBE v2 submitit logs
+**/logs/
