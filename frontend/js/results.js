@@ -51,6 +51,9 @@ const Results = (() => {
       return;
     }
 
+    // Escape HTML entities to prevent XSS from LLM output
+    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
     // Simple markdown-like rendering
     let html = text
       // Headers
