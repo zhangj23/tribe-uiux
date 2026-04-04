@@ -1,8 +1,16 @@
 """Orchestrates the full analysis pipeline for a job."""
 
+import os
+import sys
 import traceback
 
 from app.config import settings
+
+# Ensure ffmpeg is findable on Windows
+if sys.platform == "win32":
+    _ffmpeg_dir = os.path.expandvars(r"%LOCALAPPDATA%\ffmpeg-bin")
+    if os.path.isdir(_ffmpeg_dir) and _ffmpeg_dir not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + _ffmpeg_dir
 from app.services import job_manager as jm
 from app.services.tribe_runner import run_inference
 from app.services.brain_mapper import compute_ux_metrics

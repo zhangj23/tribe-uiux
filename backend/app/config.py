@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # TRIBE v2
     tribe_mock_mode: bool = True  # Set False when real TRIBE is installed
     tribe_cache_dir: str = "./cache"
-    tribe_device: str = "cuda"  # "cuda" or "cpu"
+    tribe_device: str = "auto"  # "cuda", "cpu", or "auto" (detect VRAM)
 
     # LLM
     anthropic_api_key: str = ""
