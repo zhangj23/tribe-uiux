@@ -1,4 +1,6 @@
+import re
 import shutil
+import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, File, UploadFile, HTTPException
@@ -7,6 +9,15 @@ from app.config import settings
 from app.models.schemas import UploadResponse
 from app.services.job_manager import create_job, submit_pipeline
 from app.services.pipeline import run_pipeline
+
+
+def _safe_filename(original: str) -> str:
+    """Sanitize an uploaded filename to prevent path traversal."""
+    name = Path(original).name  # strip directory components
+    name = re.sub(r"[^a-zA-Z0-9._-]", "_", name)
+    if not name or name.startswith("."):
+        name = uuid.uuid4().hex[:12] + Path(original).suffix.lower()
+    return name
 
 router = APIRouter(tags=["upload"])
 
@@ -33,8 +44,8 @@ def _classify_media(filename: str) -> str:
 async def upload_file(file: UploadFile = File(...)):
     media_type = _classify_media(file.filename)
 
-    # Save uploaded file
-    save_path = settings.upload_dir / file.filename
+    # Save uploaded file with sanitized name
+    save_path = settings.upload_dir / _safe_filename(file.filename)
     with open(save_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 

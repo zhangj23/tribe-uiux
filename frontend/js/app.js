@@ -21,6 +21,7 @@ const App = (() => {
     // Cancel button in processing view
     document.getElementById('cancelBtn').addEventListener('click', () => {
       Polling.stop();
+      Compare.stopPolling();
       BrainView.stopProcessingAnimation();
       showUpload();
     });

@@ -8,6 +8,15 @@ const Compare = (() => {
   let pollIntervalB = null;
   let resultA = null;
   let resultB = null;
+  let errorsA = 0;
+  let errorsB = 0;
+
+  const ALLOWED_EXTENSIONS = [
+    '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif',
+    '.mp4', '.mov', '.avi', '.mkv', '.webm',
+    '.mp3', '.wav', '.ogg', '.flac', '.m4a',
+  ];
+  const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
   const METRIC_LABELS = {
     visual_processing: 'Visual Processing',
@@ -61,7 +70,42 @@ const Compare = (() => {
     document.getElementById('compareBtn').style.display = 'none';
   }
 
+  function showCompareError(message) {
+    const errorEl = document.getElementById('compareError');
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.style.display = 'block';
+    }
+  }
+
+  function hideCompareError() {
+    const errorEl = document.getElementById('compareError');
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.style.display = 'none';
+    }
+  }
+
+  function isAllowedFile(file) {
+    const name = file.name.toLowerCase();
+    return ALLOWED_EXTENSIONS.some(ext => name.endsWith(ext));
+  }
+
   function selectFileB(file) {
+    hideCompareError();
+
+    // Validate file type
+    if (!isAllowedFile(file)) {
+      showCompareError('Unsupported file type. Allowed: ' + ALLOWED_EXTENSIONS.join(', '));
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      showCompareError('File too large. Maximum size is 100 MB.');
+      return;
+    }
+
     fileB = file;
     document.getElementById('dropzoneB').style.display = 'none';
     const preview = document.getElementById('filePreviewB');
@@ -86,6 +130,7 @@ const Compare = (() => {
     document.getElementById('filePreviewB').style.display = 'none';
     document.getElementById('dropzoneB').style.display = '';
     document.getElementById('runCompareBtn').disabled = true;
+    hideCompareError();
   }
 
   async function runComparison() {
@@ -97,6 +142,7 @@ const Compare = (() => {
     const btn = document.getElementById('runCompareBtn');
     btn.disabled = true;
     btn.querySelector('.btn-text').textContent = 'Uploading...';
+    hideCompareError();
 
     const formData = new FormData();
     formData.append('file_a', fileA);
@@ -114,17 +160,27 @@ const Compare = (() => {
       }
 
       const data = await resp.json();
-      // Switch to processing view and poll both jobs
+      // Reset processing UI before switching view
+      Polling.resetProcessingUI();
       resultA = null;
       resultB = null;
+      errorsA = 0;
+      errorsB = 0;
       App.switchView('processing', true);
       BrainView.startProcessingAnimation();
       startDualPolling(data.job_id_a, data.job_id_b);
     } catch (err) {
       btn.disabled = false;
       btn.querySelector('.btn-text').textContent = 'Compare Designs';
-      alert('Comparison error: ' + err.message);
+      showCompareError('Comparison error: ' + err.message);
     }
+  }
+
+  function stopPolling() {
+    if (pollIntervalA) { clearInterval(pollIntervalA); pollIntervalA = null; }
+    if (pollIntervalB) { clearInterval(pollIntervalB); pollIntervalB = null; }
+    errorsA = 0;
+    errorsB = 0;
   }
 
   function startDualPolling(jobIdA, jobIdB) {
@@ -135,6 +191,7 @@ const Compare = (() => {
       try {
         const resp = await fetch(`/api/jobs/${jobIdA}`);
         const job = await resp.json();
+        errorsA = 0;
         if (job.status === 'completed') {
           clearInterval(pollIntervalA);
           pollIntervalA = null;
@@ -145,16 +202,25 @@ const Compare = (() => {
           pollIntervalA = null;
           title.textContent = 'Design A failed: ' + (job.error || 'Unknown');
         } else {
-          // Update progress as average of both
           updateCompareProgress(job.progress, resultB ? 1 : 0);
         }
-      } catch (e) { /* retry next tick */ }
+      } catch (e) {
+        errorsA++;
+        if (errorsA >= 5) {
+          title.textContent = 'Connection lost. Retrying...';
+        }
+        if (errorsA >= 10) {
+          stopPolling();
+          title.textContent = 'Connection lost. Please try again.';
+        }
+      }
     }, 2000);
 
     pollIntervalB = setInterval(async () => {
       try {
         const resp = await fetch(`/api/jobs/${jobIdB}`);
         const job = await resp.json();
+        errorsB = 0;
         if (job.status === 'completed') {
           clearInterval(pollIntervalB);
           pollIntervalB = null;
@@ -167,7 +233,16 @@ const Compare = (() => {
         } else {
           updateCompareProgress(resultA ? 1 : 0, job.progress);
         }
-      } catch (e) { /* retry next tick */ }
+      } catch (e) {
+        errorsB++;
+        if (errorsB >= 5) {
+          title.textContent = 'Connection lost. Retrying...';
+        }
+        if (errorsB >= 10) {
+          stopPolling();
+          title.textContent = 'Connection lost. Please try again.';
+        }
+      }
     }, 2000);
   }
 
@@ -226,7 +301,7 @@ const Compare = (() => {
       const cls = diff > 0.1 ? 'delta-positive' : (diff < -0.1 ? 'delta-negative' : 'delta-neutral');
       const sigCls = significant ? ' delta-significant' : '';
       deltas.innerHTML += `<div class="compare-delta-row ${cls}${sigCls}">
-        ${sign}${diff.toFixed(2)} ${significant ? '⚠' : ''}
+        ${sign}${diff.toFixed(2)} ${significant ? '\u26A0' : ''}
       </div>`;
     }
 
@@ -282,10 +357,7 @@ const Compare = (() => {
   }
 
   function reset() {
-    if (pollIntervalA) clearInterval(pollIntervalA);
-    if (pollIntervalB) clearInterval(pollIntervalB);
-    pollIntervalA = null;
-    pollIntervalB = null;
+    stopPolling();
     resultA = null;
     resultB = null;
     fileB = null;
@@ -293,8 +365,14 @@ const Compare = (() => {
     if (compareUpload) compareUpload.style.display = 'none';
     const compareBtn = document.getElementById('compareBtn');
     if (compareBtn) compareBtn.style.display = '';
+    // Reset the compare button state
+    const runBtn = document.getElementById('runCompareBtn');
+    if (runBtn) {
+      runBtn.disabled = true;
+      runBtn.querySelector('.btn-text').textContent = 'Compare Designs';
+    }
     clearFileB();
   }
 
-  return { init, reset };
+  return { init, reset, stopPolling };
 })();
