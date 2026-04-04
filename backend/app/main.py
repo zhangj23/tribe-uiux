@@ -1,25 +1,21 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-
-class CacheControlMiddleware(BaseHTTPMiddleware):
-    """Set Cache-Control on static assets (CSS/JS)."""
-
-    async def dispatch(self, request: Request, call_next):
-        response: Response = await call_next(request)
-        path = request.url.path
-        if path.startswith("/css/") or path.startswith("/js/"):
-            response.headers["Cache-Control"] = "public, max-age=3600"
-        return response
-
 from app.config import settings
 from app.routers import upload, jobs, health, analyze_url, compare
+
+
+class CachedStaticFiles(StaticFiles):
+    """StaticFiles with Cache-Control headers."""
+
+    async def get_response(self, *args, **kwargs):
+        response = await super().get_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        return response
 
 
 @asynccontextmanager
@@ -51,7 +47,6 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=500)
-app.add_middleware(CacheControlMiddleware)
 
 # API routes (must be registered before static files)
 app.include_router(health.router, prefix="/api")
@@ -60,10 +55,10 @@ app.include_router(jobs.router, prefix="/api")
 app.include_router(analyze_url.router, prefix="/api")
 app.include_router(compare.router, prefix="/api")
 
-# Serve frontend static files under /static path
-app.mount("/css", StaticFiles(directory=str(settings.frontend_dir / "css")), name="css")
-app.mount("/js", StaticFiles(directory=str(settings.frontend_dir / "js")), name="js")
-app.mount("/assets", StaticFiles(directory=str(settings.frontend_dir / "assets")), name="assets")
+# Serve frontend static files with Cache-Control headers
+app.mount("/css", CachedStaticFiles(directory=str(settings.frontend_dir / "css")), name="css")
+app.mount("/js", CachedStaticFiles(directory=str(settings.frontend_dir / "js")), name="js")
+app.mount("/assets", CachedStaticFiles(directory=str(settings.frontend_dir / "assets")), name="assets")
 
 
 # Catch-all: serve index.html for the root and any non-API path

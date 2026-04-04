@@ -30,6 +30,7 @@ const App = (() => {
     window.addEventListener('popstate', (e) => {
       const view = (e.state && e.state.view) || 'upload';
       Polling.stop();
+      Compare.stopPolling();
       BrainView.stopProcessingAnimation();
       // For any back navigation, show the target view directly
       Object.values(views).forEach(v => v.classList.remove('view--active', 'view-enter'));

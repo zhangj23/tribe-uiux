@@ -198,8 +198,7 @@ const Compare = (() => {
           resultA = job;
           checkBothDone();
         } else if (job.status === 'failed') {
-          clearInterval(pollIntervalA);
-          pollIntervalA = null;
+          stopPolling();
           title.textContent = 'Design A failed: ' + (job.error || 'Unknown');
         } else {
           updateCompareProgress(job.progress, resultB ? 1 : 0);
@@ -227,8 +226,7 @@ const Compare = (() => {
           resultB = job;
           checkBothDone();
         } else if (job.status === 'failed') {
-          clearInterval(pollIntervalB);
-          pollIntervalB = null;
+          stopPolling();
           title.textContent = 'Design B failed: ' + (job.error || 'Unknown');
         } else {
           updateCompareProgress(resultA ? 1 : 0, job.progress);
