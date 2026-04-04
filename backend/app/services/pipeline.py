@@ -69,15 +69,20 @@ def run_pipeline(job: jm.Job):
             progress=0.75,
         )
 
-        # Step 4: Generate LLM analysis
+        # Step 4: Generate LLM analysis (with image for multimodal)
         jm.update_job(job.id, status=jm.INTERPRETING, progress=0.8)
         duration = timestamps[-1] if timestamps else 0
+        # Pass original image for multimodal analysis when available
+        image_path = None
+        if job.media_type == "image" and job.input_path and job.input_path.exists():
+            image_path = str(job.input_path)
         analysis, friction_score = generate_analysis(
             media_type=job.media_type,
             metrics=results["metrics"],
             z_scores=results["z_scores"],
             temporal_hotspots=results["temporal_hotspots"],
             duration=duration,
+            image_path=image_path,
         )
         jm.update_job(
             job.id,

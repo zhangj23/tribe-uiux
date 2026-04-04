@@ -25,7 +25,12 @@ Key interpretive rules:
 4. HIGH reading/language (z > 1) = text-heavy or hard to scan. Recommend shorter copy, better typography.
 5. LOW emotional response (z < -1) = the design feels clinical/cold. Recommend warmer colors, imagery.
 
-Be specific, reference actual metric values, and provide concrete fixes (not vague advice like "improve the layout"). Each recommendation should name a specific element or area to change and how."""
+Be specific, reference actual metric values, and provide concrete fixes (not vague advice like "improve the layout"). Each recommendation should name a specific element or area to change and how.
+
+When an image of the design is provided alongside the metrics:
+- Reference specific visible elements by description (e.g., "the red CTA button in the hero section", "the dense navigation menu with 12+ items")
+- Connect neural metric anomalies to specific visual elements you can see
+- Explain WHY a specific element likely caused the neural response (e.g., "the full-width carousel likely drives the elevated attention score because it creates competing focal points")"""
 
 
 def generate_analysis(
