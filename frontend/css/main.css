@@ -31,7 +31,7 @@
   /* Text hierarchy */
   --text-primary: #e8eaf0;
   --text-secondary: #8b90a0;
-  --text-dim: #6b7190;
+  --text-dim: #7d839c;
   --dim: #363b4f;
 
   /* Typography */
@@ -813,7 +813,7 @@ body {
 }
 
 /* ============ RESPONSIVE ============ */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .results-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -822,7 +822,7 @@ body {
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
   .results-grid {
     grid-template-columns: 1fr;
   }

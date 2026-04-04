@@ -26,25 +26,26 @@ const App = (() => {
     // Browser history navigation
     window.addEventListener('popstate', (e) => {
       const view = (e.state && e.state.view) || 'upload';
-      if (view === 'upload') {
-        Polling.stop();
-        BrainView.stopProcessingAnimation();
-        Upload.clearFile();
-        switchView('upload');
-      }
+      Polling.stop();
+      BrainView.stopProcessingAnimation();
+      // For any back navigation, show the target view directly
+      Object.values(views).forEach(v => v.classList.remove('view--active', 'view-enter'));
+      const target = views[view] || views.upload;
+      target.classList.add('view--active', 'view-enter');
     });
 
     // Check backend health
     checkHealth();
   }
 
-  function switchView(name) {
+  function switchView(name, replace = false) {
     Object.values(views).forEach(v => {
       v.classList.remove('view--active', 'view-enter');
     });
     const target = views[name];
     target.classList.add('view--active', 'view-enter');
-    history.pushState({ view: name }, '', '#' + name);
+    const method = replace ? 'replaceState' : 'pushState';
+    history[method]({ view: name }, '', '#' + name);
   }
 
   function showUpload() {
@@ -56,7 +57,7 @@ const App = (() => {
 
   function startProcessing(jobId) {
     Polling.resetProcessingUI();
-    switchView('processing');
+    switchView('processing', true); // replaceState so back goes to upload
     BrainView.startProcessingAnimation();
     Polling.start(jobId);
   }

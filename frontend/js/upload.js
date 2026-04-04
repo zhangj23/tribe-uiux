@@ -127,6 +127,10 @@ const Upload = (() => {
     document.getElementById('uploadMeta').style.display = 'none';
     document.getElementById('fileInput').value = '';
     hideUploadError();
+    // Reset analyze button state (may be stuck from previous upload)
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = false;
+    btn.querySelector('.btn-text').textContent = 'Begin Analysis';
   }
 
   async function uploadFile(file) {
