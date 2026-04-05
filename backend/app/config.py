@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Paths
-    base_dir: Path = Path(__file__).resolve().parent.parent.parent
+    base_dir: Path = Path(__file__).resolve().parent.parent
     upload_dir: Path = base_dir / "data" / "uploads"
     baselines_dir: Path = base_dir / "data" / "baselines"
     frontend_dir: Path = base_dir / "frontend"

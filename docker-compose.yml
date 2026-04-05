@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - "9100:9100"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - TRIBE_MOCK_MODE=true
+    volumes:
+      # Persist uploads between restarts
+      - uploads:/app/data/uploads
+      # Mount source for live reload during development
+      - ./backend/app:/app/app
+      - ./frontend:/app/frontend
+    restart: unless-stopped
+
+volumes:
+  uploads:
