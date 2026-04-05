@@ -9,11 +9,20 @@ services:
     environment:
       - TRIBE_MOCK_MODE=true
     volumes:
-      # Persist uploads between restarts
       - uploads:/app/data/uploads
-      # Mount source for live reload during development
       - ./backend/app:/app/app
-      - ./frontend:/app/frontend
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend-next
+    ports:
+      - "3000:3000"
+    environment:
+      - BACKEND_URL=http://app:9100
+    volumes:
+      - ./frontend-next/src:/app/src
+    depends_on:
+      - app
     restart: unless-stopped
 
 volumes:
