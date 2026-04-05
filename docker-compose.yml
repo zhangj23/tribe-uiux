@@ -1,35 +1,20 @@
-# TRIBE UX Analyzer — Docker Compose
-# License: CC-BY-NC-4.0 (non-commercial use only)
-#
-# Usage:
-#   docker compose up --build          # CPU mode
-#   docker compose up --build --gpus   # GPU mode (requires nvidia-docker)
-
 services:
-  tribe-ux:
+  app:
     build: .
     ports:
       - "9100:9100"
     env_file:
-      - backend/.env
+      - path: .env
+        required: false
     environment:
-      - TRIBE_MOCK_MODE=${TRIBE_MOCK_MODE:-true}
-      - TRIBE_DEVICE=${TRIBE_DEVICE:-auto}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - TRIBE_MOCK_MODE=true
     volumes:
-      - ./data/uploads:/app/data/uploads
-      - ./data/baselines:/app/data/baselines
-      - tribe-cache:/app/backend/cache
-      - hf-cache:/root/.cache/huggingface
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      # Persist uploads between restarts
+      - uploads:/app/data/uploads
+      # Mount source for live reload during development
+      - ./backend/app:/app/app
+      - ./frontend:/app/frontend
     restart: unless-stopped
 
 volumes:
-  tribe-cache:
-  hf-cache:
+  uploads:
