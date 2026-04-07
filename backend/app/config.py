@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     tribe_cache_dir: str = "./cache"
     tribe_device: str = "auto"  # "cuda", "cpu", or "auto" (detect VRAM)
 
+    # RunPod Serverless (set both to use GPU inference via RunPod)
+    runpod_endpoint_id: str = ""  # e.g. "abc123xyz" from RunPod dashboard
+    runpod_api_key: str = ""  # RunPod API key
+
     # LLM
     anthropic_api_key: str = ""
 
