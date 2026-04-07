@@ -1,9 +1,10 @@
 /**
  * File upload with drag-and-drop handling.
- * Posts to /api/upload and returns a job_id.
+ * Uses XMLHttpRequest for upload progress events.
  */
 const Upload = (() => {
   let selectedFile = null;
+  let currentXHR = null;
 
   function init() {
     const dropzone = document.getElementById('dropzone');
@@ -12,7 +13,6 @@ const Upload = (() => {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const fileRemove = document.getElementById('fileRemove');
 
-    // Drag events
     dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropzone.classList.add('drag-over');
@@ -30,7 +30,6 @@ const Upload = (() => {
       }
     });
 
-    // Click to browse
     dropzone.addEventListener('click', (e) => {
       if (e.target !== browseBtn) {
         fileInput.click();
@@ -48,12 +47,10 @@ const Upload = (() => {
       }
     });
 
-    // Remove file
     fileRemove.addEventListener('click', () => {
       clearFile();
     });
 
-    // Analyze button
     analyzeBtn.addEventListener('click', () => {
       if (selectedFile) {
         uploadFile(selectedFile);
@@ -71,7 +68,6 @@ const Upload = (() => {
     nameEl.textContent = file.name;
     sizeEl.textContent = formatSize(file.size);
 
-    // Set icon based on type
     if (file.type.startsWith('image/')) {
       iconEl.textContent = '🖼';
     } else if (file.type.startsWith('video/')) {
@@ -86,31 +82,107 @@ const Upload = (() => {
   }
 
   function clearFile() {
+    if (currentXHR) {
+      currentXHR.abort();
+      currentXHR = null;
+    }
     selectedFile = null;
     document.getElementById('uploadMeta').style.display = 'none';
     document.getElementById('fileInput').value = '';
+<<<<<<< Updated upstream
   }
 
   async function uploadFile(file) {
+=======
+    hideUploadError();
+    hideProgress();
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = false;
+    btn.querySelector('.btn-text').textContent = 'Begin Analysis';
+  }
+
+  function showProgress(pct) {
+    const wrap = document.getElementById('uploadProgressWrap');
+    const bar = document.getElementById('uploadProgressBar');
+    const label = document.getElementById('uploadProgressPct');
+    if (!wrap) return;
+    wrap.style.display = 'block';
+    bar.style.width = pct + '%';
+    label.textContent = Math.round(pct) + '%';
+  }
+
+  function hideProgress() {
+    const wrap = document.getElementById('uploadProgressWrap');
+    if (wrap) wrap.style.display = 'none';
+  }
+
+  function uploadFile(file) {
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const btnText = analyzeBtn.querySelector('.btn-text');
+
+    analyzeBtn.disabled = true;
+    btnText.textContent = 'Uploading...';
+    hideUploadError();
+    showProgress(0);
+
+>>>>>>> Stashed changes
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-      const resp = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+    const xhr = new XMLHttpRequest();
+    currentXHR = xhr;
 
-      if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.detail || 'Upload failed');
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const pct = (e.loaded / e.total) * 100;
+        showProgress(pct);
+        btnText.textContent = Math.round(pct) + '% uploaded';
       }
+    });
 
+<<<<<<< Updated upstream
       const data = await resp.json();
       App.startProcessing(data.job_id);
     } catch (err) {
       alert('Upload error: ' + err.message);
     }
+=======
+    xhr.addEventListener('load', () => {
+      currentXHR = null;
+      hideProgress();
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const data = JSON.parse(xhr.responseText);
+        App.startProcessing(data.job_id);
+      } else {
+        let msg = 'Upload failed';
+        try {
+          const err = JSON.parse(xhr.responseText);
+          msg = err.detail || msg;
+        } catch {}
+        showUploadError('Upload error: ' + msg);
+        clearFile();
+        analyzeBtn.disabled = false;
+        btnText.textContent = 'Begin Analysis';
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      currentXHR = null;
+      hideProgress();
+      showUploadError('Upload error: Network failure');
+      clearFile();
+      analyzeBtn.disabled = false;
+      btnText.textContent = 'Begin Analysis';
+    });
+
+    xhr.addEventListener('abort', () => {
+      currentXHR = null;
+      hideProgress();
+    });
+
+    xhr.open('POST', '/api/upload');
+    xhr.send(formData);
+>>>>>>> Stashed changes
   }
 
   function formatSize(bytes) {

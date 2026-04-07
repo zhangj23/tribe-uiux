@@ -88,6 +88,12 @@
           </div>
           <button class="file-remove" id="fileRemove">×</button>
         </div>
+        <div class="upload-progress-wrap" id="uploadProgressWrap" style="display:none">
+          <div class="progress-track">
+            <div class="progress-bar" id="uploadProgressBar" style="width:0%"></div>
+          </div>
+          <span class="upload-progress-pct" id="uploadProgressPct">0%</span>
+        </div>
         <button class="btn-analyze" id="analyzeBtn">
           <span class="btn-text">Begin Analysis</span>
           <span class="btn-arrow">→</span>
@@ -156,12 +162,24 @@
             <span>Timestep</span>
             <span id="timestepValue">0.00s</span>
           </label>
-          <input type="range" id="timestepSlider" class="slider" min="0" max="29" value="0">
+          <div class="slider-row">
+            <button class="play-pause-btn" id="playPauseBtn" title="Play/Pause (Space)">&#x25B6;</button>
+            <input type="range" id="timestepSlider" class="slider" min="0" max="29" value="0">
+          </div>
         </div>
         <div class="brain-legend">
-          <span class="legend-low">Low</span>
+          <span class="legend-low">Low <span class="legend-val" id="legendMinVal"></span></span>
           <div class="legend-gradient"></div>
-          <span class="legend-high">High</span>
+          <span class="legend-high">High <span class="legend-val" id="legendMaxVal"></span></span>
+        </div>
+        <div class="metric-toggles" id="metricToggles">
+          <button class="metric-toggle active" data-metric="">All</button>
+          <button class="metric-toggle" data-metric="visual_processing">Visual</button>
+          <button class="metric-toggle" data-metric="object_recognition">Object</button>
+          <button class="metric-toggle" data-metric="reading_language">Language</button>
+          <button class="metric-toggle" data-metric="attention_salience">Attention</button>
+          <button class="metric-toggle" data-metric="cognitive_load">Cog Load</button>
+          <button class="metric-toggle" data-metric="emotional_response">Emotion</button>
         </div>
       </section>
 
@@ -183,7 +201,10 @@
       <section class="panel panel--analysis">
         <div class="panel-header">
           <h3>AI Recommendations</h3>
-          <span class="panel-badge">Claude</span>
+          <div class="panel-header-actions">
+            <button class="btn-copy" id="copyAnalysisBtn" title="Copy analysis text">Copy</button>
+            <span class="panel-badge">Claude</span>
+          </div>
         </div>
         <div class="friction-score-display" id="frictionDisplay">
           <div class="friction-number" id="frictionNumber">--</div>
@@ -201,11 +222,24 @@
     </div>
   </main>
 
+<<<<<<< Updated upstream
   <script src="js/brain-view.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/upload.js"></script>
   <script src="js/polling.js"></script>
   <script src="js/results.js"></script>
   <script src="js/app.js"></script>
+=======
+  <!-- Brain hover tooltip -->
+  <div class="brain-tooltip" id="brainTooltip" style="display:none"></div>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script defer src="js/brain-view.js"></script>
+  <script defer src="js/charts.js"></script>
+  <script defer src="js/upload.js"></script>
+  <script defer src="js/polling.js"></script>
+  <script defer src="js/results.js"></script>
+  <script defer src="js/app.js"></script>
+>>>>>>> Stashed changes
 </body>
 </html>
