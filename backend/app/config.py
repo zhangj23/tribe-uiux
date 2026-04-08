@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     base_dir: Path = Path(__file__).resolve().parent.parent
     upload_dir: Path = base_dir / "data" / "uploads"
     baselines_dir: Path = base_dir / "data" / "baselines"
-    frontend_dir: Path = base_dir / "frontend"
 
     # TRIBE v2
     tribe_mock_mode: bool = True  # Set False when real TRIBE is installed

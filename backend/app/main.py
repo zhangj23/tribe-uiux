@@ -7,15 +7,6 @@ from app.config import settings
 from app.routers import upload, jobs, health, analyze_url, compare
 
 
-class CachedStaticFiles(StaticFiles):
-    """StaticFiles with Cache-Control headers."""
-
-    async def get_response(self, *args, **kwargs):
-        response = await super().get_response(*args, **kwargs)
-        response.headers["Cache-Control"] = "public, max-age=3600"
-        return response
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: preload TRIBE model if not in mock mode
@@ -52,14 +43,3 @@ app.include_router(upload.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(analyze_url.router, prefix="/api")
 app.include_router(compare.router, prefix="/api")
-
-# Serve frontend static files with Cache-Control headers
-app.mount("/css", CachedStaticFiles(directory=str(settings.frontend_dir / "css")), name="css")
-app.mount("/js", CachedStaticFiles(directory=str(settings.frontend_dir / "js")), name="js")
-app.mount("/assets", CachedStaticFiles(directory=str(settings.frontend_dir / "assets")), name="assets")
-
-
-# Catch-all: serve index.html for the root and any non-API path
-@app.get("/")
-async def serve_index():
-    return FileResponse(str(settings.frontend_dir / "index.html"))
