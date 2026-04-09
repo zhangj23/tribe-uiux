@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, DragEvent, ChangeEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from 'react';
 import HistoryPanel from './HistoryPanel';
 import FrictionSparkline from './FrictionSparkline';
 import { useHistory } from '@/hooks/useHistory';
@@ -80,6 +80,40 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
     e.target.value = '';
   }, [selectFile]);
 
+  // Cmd/Ctrl + V on the upload view consumes a clipboard image (e.g. a
+  // screenshot taken with macOS Cmd+Shift+4) and stages it like any other
+  // file. Skip the handler if the focus is in a text input so paste still
+  // works for the search field, history rename, and note editor.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (target as HTMLElement).isContentEditable) {
+          return;
+        }
+      }
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.kind !== 'file') continue;
+        const blob = item.getAsFile();
+        if (!blob) continue;
+        // Synthesize a friendly file name from the mime type if the browser
+        // didn't supply one (Chrome usually returns "image.png").
+        const ext = blob.type.split('/')[1] || 'png';
+        const named = blob.name && blob.name !== 'image.png'
+          ? blob
+          : new File([blob], `pasted-${Date.now()}.${ext}`, { type: blob.type });
+        e.preventDefault();
+        selectFile(named);
+        return;
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [selectFile]);
+
   const uploadFile = async () => {
     if (!selectedFile || uploading) return;
     setUploading(true);
@@ -145,7 +179,7 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
             <path d="M13 22l4-5 4 5 5-7 5 7" stroke="#39ff85" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" />
           </svg>
           <p className="dropzone-text">
-            Drop file here or{' '}
+            Drop file here, paste a screenshot, or{' '}
             <button
               className="dropzone-browse"
               onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
