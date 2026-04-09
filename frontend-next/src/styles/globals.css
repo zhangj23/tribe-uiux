@@ -2250,6 +2250,70 @@ body {
   font-weight: 600;
 }
 
+/* ===== Compare spike timelines ===== */
+.compare-spikes {
+  margin-bottom: var(--space-2xl);
+}
+
+.compare-spikes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.compare-spikes-header h3 {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.compare-spikes-sub {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.compare-spikes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+.compare-spikes-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.compare-spikes-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 0 var(--space-sm);
+}
+
+/* The embedded SpikeTimeline cards already have their own padding;
+   strip the outer max-width inside compare so they fit the column. */
+.compare-spikes-col .spike-timeline {
+  margin: 0;
+  max-width: none;
+}
+
+@media (max-width: 960px) {
+  .compare-spikes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Compare table ===== */
 .compare-table-section {
   background: var(--bg-raised);

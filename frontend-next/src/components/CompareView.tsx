@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { compareJobs, type MetricDelta } from '@/lib/compareDelta';
+import SpikeTimeline from './SpikeTimeline';
 import type { HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
 
@@ -138,6 +139,26 @@ export default function CompareView({ entryA, entryB, onOpenA, onOpenB, onExit }
           <button className="compare-hero-open" onClick={() => onOpenB(jobB)}>View full analysis</button>
         </div>
       </section>
+
+      {/* Side-by-side spike timelines so users can see WHEN each version peaked */}
+      {(jobA.timeseries || jobB.timeseries) && (
+        <section className="compare-spikes">
+          <header className="compare-spikes-header">
+            <h3>Spike timelines</h3>
+            <span className="compare-spikes-sub">Where each version&apos;s neural peaks landed</span>
+          </header>
+          <div className="compare-spikes-grid">
+            <div className="compare-spikes-col">
+              <span className="compare-spikes-label">Version A · {nameOf(entryA)}</span>
+              <SpikeTimeline timeseries={jobA.timeseries} timestamps={jobA.timestamps} />
+            </div>
+            <div className="compare-spikes-col">
+              <span className="compare-spikes-label">Version B · {nameOf(entryB)}</span>
+              <SpikeTimeline timeseries={jobB.timeseries} timestamps={jobB.timestamps} />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Metric deltas table */}
       {result.metrics.length > 0 && (
