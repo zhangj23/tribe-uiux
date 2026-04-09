@@ -998,6 +998,84 @@ body {
 .analysis-text ol, .analysis-text ul { margin-bottom: var(--space-md); padding-left: var(--space-lg); }
 .analysis-text li { margin-bottom: var(--space-sm); }
 
+/* ===== Collapsible analysis sections ===== */
+.analysis-sections { display: flex; flex-direction: column; gap: var(--space-sm); }
+
+.analysis-section {
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.analysis-section.is-open {
+  border-color: rgba(57, 255, 133, 0.18);
+}
+
+.analysis-section-header {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 12px 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
+  color: var(--phosphor);
+  transition: background 0.2s, color 0.2s;
+}
+
+.analysis-section-header--h2 { font-size: 0.78rem; }
+.analysis-section-header--h3 { font-size: 0.72rem; color: var(--cyan); }
+
+.analysis-section-header:hover { background: var(--bg-surface); }
+
+.analysis-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.analysis-chevron.is-open {
+  transform: rotate(-180deg);
+  color: var(--phosphor);
+}
+
+.analysis-section-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.analysis-section-body {
+  padding: 4px 14px 14px 30px;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  animation: analysis-section-open 0.18s ease-out;
+}
+
+.analysis-section-body p { margin-bottom: 10px; }
+.analysis-section-body p:last-child { margin-bottom: 0; }
+.analysis-section-body ul,
+.analysis-section-body ol {
+  margin: 0 0 10px;
+  padding-left: 20px;
+}
+.analysis-section-body li { margin-bottom: 6px; }
+.analysis-section-body strong { color: var(--text-primary); font-weight: 500; }
+
+@keyframes analysis-section-open {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ============ GAUGE COMPONENT ============ */
 .gauge {
   background: var(--bg-surface);

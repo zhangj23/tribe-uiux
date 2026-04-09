@@ -55,7 +55,11 @@ export default function ProcessingView({ jobId, onComplete, onCancel }: Props) {
             </svg>
           </div>
           <h2 className="processing-error-title">
-            {error.kind === 'network' ? 'Connection lost' : 'Analysis failed'}
+            {error.kind === 'network'
+              ? 'Connection lost'
+              : error.kind === 'timeout'
+              ? 'Taking too long'
+              : 'Analysis failed'}
           </h2>
           <p className="processing-error-message">{error.message}</p>
           <div className="processing-error-actions">

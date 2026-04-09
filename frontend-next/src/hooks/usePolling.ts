@@ -3,12 +3,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Job } from '@/types';
 
-export type PollingErrorKind = 'network' | 'failed';
+export type PollingErrorKind = 'network' | 'failed' | 'timeout';
 
 export interface PollingError {
   kind: PollingErrorKind;
   message: string;
 }
+
+// Hard cap on how long we're willing to wait for a single analysis.
+// At 2-second polling intervals, 10 minutes = 300 ticks.
+const MAX_ELAPSED_MS = 10 * 60 * 1000;
 
 export function usePolling(
   jobId: string | null,
@@ -18,6 +22,7 @@ export function usePolling(
   const [stage, setStage] = useState<string>('');
   const [error, setError] = useState<PollingError | null>(null);
   const consecutiveErrors = useRef(0);
+  const startedAt = useRef<number>(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -36,8 +41,20 @@ export function usePolling(
     setStage('');
     setError(null);
     consecutiveErrors.current = 0;
+    startedAt.current = Date.now();
 
     const poll = async () => {
+      // Hard timeout to prevent an indefinitely hanging job from looking
+      // like the app is stuck.
+      if (Date.now() - startedAt.current > MAX_ELAPSED_MS) {
+        stop();
+        setError({
+          kind: 'timeout',
+          message: 'Analysis took longer than 10 minutes. The job may still be running on the server — try refreshing later.',
+        });
+        return;
+      }
+
       try {
         const resp = await fetch(`/api/jobs/${jobId}`);
         if (!resp.ok) throw new Error('Request failed');
