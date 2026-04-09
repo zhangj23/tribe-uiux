@@ -5,6 +5,7 @@ import {
   loadHistory,
   addHistoryEntry,
   removeHistoryEntry,
+  removeHistoryEntries,
   renameHistoryEntry,
   togglePinHistoryEntry,
   setHistoryNote,
@@ -37,6 +38,11 @@ export function useHistory() {
     setEntries(loadHistory());
   }, []);
 
+  const removeMany = useCallback((ids: string[]) => {
+    removeHistoryEntries(ids);
+    setEntries(loadHistory());
+  }, []);
+
   const rename = useCallback((id: string, label: string) => {
     renameHistoryEntry(id, label);
     setEntries(loadHistory());
@@ -57,5 +63,5 @@ export function useHistory() {
     setEntries([]);
   }, []);
 
-  return { entries, ready, record, remove, rename, togglePin, setNote, clear };
+  return { entries, ready, record, remove, removeMany, rename, togglePin, setNote, clear };
 }

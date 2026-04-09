@@ -2122,6 +2122,22 @@ button.header-left.header-left--link:focus-visible {
   background: none;
 }
 
+.history-compare-btn--danger {
+  color: var(--red);
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+
+.history-compare-btn--danger:hover {
+  background: rgba(255, 77, 106, 0.2);
+}
+
+.history-compare-btn--danger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: none;
+}
+
 .history-card--selectable { cursor: pointer; }
 
 .history-card.is-selected {

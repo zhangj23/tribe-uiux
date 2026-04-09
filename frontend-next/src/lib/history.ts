@@ -127,6 +127,13 @@ export function removeHistoryEntry(id: string) {
   saveAll(next);
 }
 
+export function removeHistoryEntries(ids: string[]) {
+  if (ids.length === 0) return;
+  const drop = new Set(ids);
+  const next = loadHistory().filter(e => !drop.has(e.id));
+  saveAll(next);
+}
+
 export function renameHistoryEntry(id: string, label: string): HistoryEntry | null {
   const entries = loadHistory();
   let updated: HistoryEntry | null = null;

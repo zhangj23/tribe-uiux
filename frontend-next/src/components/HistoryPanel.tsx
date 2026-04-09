@@ -54,15 +54,20 @@ interface Props {
   onCompare?: (a: HistoryEntry, b: HistoryEntry) => void;
 }
 
+type Mode = 'browse' | 'compare' | 'select';
+
 export default function HistoryPanel({ onOpen, onCompare }: Props) {
-  const { entries, remove, rename, togglePin, setNote, clear } = useHistory();
+  const { entries, remove, removeMany, rename, togglePin, setNote, clear } = useHistory();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const [compareMode, setCompareMode] = useState(false);
+  const [mode, setMode] = useState<Mode>('browse');
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [openNoteId, setOpenNoteId] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
+
+  const compareMode = mode === 'compare';
+  const selectMode = mode === 'select';
 
   const filteredEntries = useMemo(() => {
     const matched = entries.filter(e => matchesQuery(e, query));
@@ -122,14 +127,14 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const toggleSelect = useCallback((id: string) => {
     setSelected(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length >= 2) {
-        // Already have 2 — replace the oldest so users can quickly swap out
-        // their first pick without having to uncheck manually.
+      // In compare mode we cap at 2 picks (and roll the oldest out so the
+      // user can swap quickly). In bulk-select mode there's no cap.
+      if (mode === 'compare' && prev.length >= 2) {
         return [prev[1], id];
       }
       return [...prev, id];
     });
-  }, []);
+  }, [mode]);
 
   const runCompare = useCallback(() => {
     if (selected.length !== 2 || !onCompare) return;
@@ -137,15 +142,24 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
     const b = entries.find(e => e.id === selected[1]);
     if (a && b) {
       onCompare(a, b);
-      setCompareMode(false);
+      setMode('browse');
       setSelected([]);
     }
   }, [selected, entries, onCompare]);
 
-  const exitCompareMode = useCallback(() => {
-    setCompareMode(false);
+  const exitMode = useCallback(() => {
+    setMode('browse');
     setSelected([]);
   }, []);
+
+  const runBulkDelete = useCallback(() => {
+    if (selected.length === 0) return;
+    const count = selected.length;
+    if (!confirm(`Delete ${count} ${count === 1 ? 'analysis' : 'analyses'}? This cannot be undone.`)) return;
+    removeMany(selected);
+    setMode('browse');
+    setSelected([]);
+  }, [selected, removeMany]);
 
   if (entries.length === 0) {
     return (
@@ -178,12 +192,14 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
           <h3 id="history-title">Recent analyses</h3>
           <p className="history-sub">
             {compareMode
-              ? `Pick ${2 - selected.length} more to compare.`
+              ? `Pick ${Math.max(0, 2 - selected.length)} more to compare.`
+              : selectMode
+              ? `${selected.length} selected — tap cards to add or remove.`
               : 'Stored locally in your browser — private to this device. Double-click a name to rename.'}
           </p>
         </div>
         <div className="history-header-actions">
-          {!compareMode && (
+          {mode === 'browse' && (
             <div className="history-search-wrap">
               <input
                 type="search"
@@ -207,16 +223,25 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
               )}
             </div>
           )}
-          {canCompare && !compareMode && (
+          {mode === 'browse' && canCompare && (
             <button
               type="button"
               className="history-compare-btn"
-              onClick={() => setCompareMode(true)}
+              onClick={() => { setMode('compare'); setSelected([]); }}
             >
               Compare two
             </button>
           )}
-          {compareMode && (
+          {mode === 'browse' && entries.length > 0 && (
+            <button
+              type="button"
+              className="history-compare-btn"
+              onClick={() => { setMode('select'); setSelected([]); }}
+            >
+              Select
+            </button>
+          )}
+          {mode === 'compare' && (
             <>
               <button
                 type="button"
@@ -229,13 +254,32 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
               <button
                 type="button"
                 className="history-clear"
-                onClick={exitCompareMode}
+                onClick={exitMode}
               >
                 Cancel
               </button>
             </>
           )}
-          {!compareMode && (
+          {mode === 'select' && (
+            <>
+              <button
+                type="button"
+                className="history-compare-btn history-compare-btn--danger"
+                onClick={runBulkDelete}
+                disabled={selected.length === 0}
+              >
+                Delete {selected.length || ''}
+              </button>
+              <button
+                type="button"
+                className="history-clear"
+                onClick={exitMode}
+              >
+                Cancel
+              </button>
+            </>
+          )}
+          {mode === 'browse' && (
             <button
               type="button"
               className="history-clear"
@@ -265,10 +309,12 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
           const displayName = entry.label || entry.fileName;
           const isEditing = editingId === entry.id;
           const isSelected = selected.includes(entry.id);
+          const inSelectMode = compareMode || selectMode;
           const cardClass =
-            `history-card history-card--${verdict.tone}${compareMode ? ' history-card--selectable' : ''}${isSelected ? ' is-selected' : ''}${entry.pinned ? ' is-pinned' : ''}`;
+            `history-card history-card--${verdict.tone}${inSelectMode ? ' history-card--selectable' : ''}${isSelected ? ' is-selected' : ''}${entry.pinned ? ' is-pinned' : ''}`;
 
-          if (compareMode) {
+          if (inSelectMode) {
+            const purpose = compareMode ? 'comparison' : 'bulk delete';
             return (
               <li key={entry.id} className={cardClass}>
                 <button
@@ -282,7 +328,7 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                     }
                   }}
                   aria-pressed={isSelected}
-                  aria-label={`${isSelected ? 'Deselect' : 'Select'} ${displayName} for comparison`}
+                  aria-label={`${isSelected ? 'Deselect' : 'Select'} ${displayName} for ${purpose}`}
                 >
                   <span className={`history-checkbox${isSelected ? ' is-checked' : ''}`} aria-hidden>
                     {isSelected ? '✓' : ''}
