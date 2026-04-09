@@ -37,6 +37,25 @@ function typeGlyph(type: HistoryEntry['fileType']) {
   }
 }
 
+interface FilterChipProps {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  glyph?: string;
+  tone?: 'phosphor' | 'cyan' | 'amber' | 'red';
+}
+
+function FilterChip({ label, active, onClick, glyph, tone }: FilterChipProps) {
+  const cls =
+    `history-filter-chip${active ? ' is-active' : ''}${tone ? ' history-filter-chip--' + tone : ''}`;
+  return (
+    <button type="button" className={cls} onClick={onClick} aria-pressed={active}>
+      {glyph && <span aria-hidden>{glyph}</span>}
+      {label}
+    </button>
+  );
+}
+
 function timeAgo(ts: number): string {
   const delta = Math.max(0, Date.now() - ts);
   const mins = Math.floor(delta / 60000);
@@ -55,6 +74,28 @@ interface Props {
 }
 
 type Mode = 'browse' | 'compare' | 'select';
+type TypeFilter = 'all' | 'image' | 'video' | 'audio';
+type TierFilter = 'all' | 'low' | 'healthy' | 'moderate' | 'high';
+
+const TIER_RANGES: Record<Exclude<TierFilter, 'all'>, [number, number]> = {
+  low:      [0, 3],
+  healthy:  [3, 5],
+  moderate: [5, 7],
+  high:     [7, 11],
+};
+
+function matchesType(entry: HistoryEntry, type: TypeFilter): boolean {
+  if (type === 'all') return true;
+  return entry.fileType === type;
+}
+
+function matchesTier(entry: HistoryEntry, tier: TierFilter): boolean {
+  if (tier === 'all') return true;
+  const score = entry.job.friction_score;
+  if (score == null) return false;
+  const [lo, hi] = TIER_RANGES[tier];
+  return score >= lo && score < hi;
+}
 
 export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const { entries, remove, removeMany, rename, togglePin, setNote, clear } = useHistory();
@@ -63,6 +104,8 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const [mode, setMode] = useState<Mode>('browse');
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [tierFilter, setTierFilter] = useState<TierFilter>('all');
   const [openNoteId, setOpenNoteId] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
 
@@ -70,7 +113,9 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const selectMode = mode === 'select';
 
   const filteredEntries = useMemo(() => {
-    const matched = entries.filter(e => matchesQuery(e, query));
+    const matched = entries.filter(
+      e => matchesQuery(e, query) && matchesType(e, typeFilter) && matchesTier(e, tierFilter)
+    );
     // Pinned first, then by savedAt descending. Stable sort preserves the
     // existing order within each bucket.
     return matched.slice().sort((a, b) => {
@@ -79,7 +124,9 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
       if (aPinned !== bPinned) return bPinned - aPinned;
       return b.savedAt - a.savedAt;
     });
-  }, [entries, query]);
+  }, [entries, query, typeFilter, tierFilter]);
+
+  const filtersActive = typeFilter !== 'all' || tierFilter !== 'all' || query.length > 0;
 
   const beginEdit = useCallback((entry: HistoryEntry) => {
     setEditingId(entry.id);
@@ -293,11 +340,77 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
         </div>
       </div>
 
-      {filteredEntries.length === 0 && query && (
+      {mode === 'browse' && entries.length > 1 && (
+        <div className="history-filters" role="group" aria-label="Filter analyses">
+          <FilterChip
+            label="All"
+            active={typeFilter === 'all'}
+            onClick={() => setTypeFilter('all')}
+          />
+          <FilterChip
+            label="Image"
+            glyph="🖼"
+            active={typeFilter === 'image'}
+            onClick={() => setTypeFilter('image')}
+          />
+          <FilterChip
+            label="Video"
+            glyph="🎬"
+            active={typeFilter === 'video'}
+            onClick={() => setTypeFilter('video')}
+          />
+          <FilterChip
+            label="Audio"
+            glyph="🎵"
+            active={typeFilter === 'audio'}
+            onClick={() => setTypeFilter('audio')}
+          />
+          <span className="history-filters-divider" aria-hidden>·</span>
+          <FilterChip
+            label="Any score"
+            active={tierFilter === 'all'}
+            onClick={() => setTierFilter('all')}
+          />
+          <FilterChip
+            label="Low"
+            tone="phosphor"
+            active={tierFilter === 'low'}
+            onClick={() => setTierFilter('low')}
+          />
+          <FilterChip
+            label="Healthy"
+            tone="cyan"
+            active={tierFilter === 'healthy'}
+            onClick={() => setTierFilter('healthy')}
+          />
+          <FilterChip
+            label="Moderate"
+            tone="amber"
+            active={tierFilter === 'moderate'}
+            onClick={() => setTierFilter('moderate')}
+          />
+          <FilterChip
+            label="High"
+            tone="red"
+            active={tierFilter === 'high'}
+            onClick={() => setTierFilter('high')}
+          />
+        </div>
+      )}
+
+      {filteredEntries.length === 0 && filtersActive && (
         <div className="history-no-results">
-          <p>No analyses match &ldquo;{query}&rdquo;.</p>
-          <button type="button" className="history-clear" onClick={() => setQuery('')}>
-            Clear search
+          <p>No analyses match the current filters.</p>
+          <button
+            type="button"
+            className="history-clear"
+            onClick={() => {
+              setQuery('');
+              setTypeFilter('all');
+              setTierFilter('all');
+            }}
+          >
+            Reset filters
           </button>
         </div>
       )}

@@ -1796,6 +1796,72 @@ button.header-left.header-left--link:focus-visible {
   border-color: var(--red);
 }
 
+/* ===== History filter chips ===== */
+.history-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) 2px;
+}
+
+.history-filters-divider {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0 4px;
+}
+
+.history-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-raised);
+  border: var(--border);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.history-filter-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.history-filter-chip.is-active {
+  color: var(--phosphor);
+  border-color: var(--phosphor);
+  background: var(--phosphor-glow);
+}
+
+.history-filter-chip--phosphor.is-active {
+  color: var(--phosphor);
+  border-color: var(--phosphor);
+  background: var(--phosphor-glow);
+}
+.history-filter-chip--cyan.is-active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+.history-filter-chip--amber.is-active {
+  color: var(--amber);
+  border-color: var(--amber);
+  background: var(--amber-dim);
+}
+.history-filter-chip--red.is-active {
+  color: var(--red);
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+
 /* ===== History search ===== */
 .history-search-wrap {
   position: relative;
