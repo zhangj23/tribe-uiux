@@ -56,17 +56,24 @@ interface Props {
 }
 
 export default function HistoryPanel({ onOpen, onCompare }: Props) {
-  const { entries, remove, rename, clear } = useHistory();
+  const { entries, remove, rename, togglePin, clear } = useHistory();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [compareMode, setCompareMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState('');
 
-  const filteredEntries = useMemo(
-    () => entries.filter(e => matchesQuery(e, query)),
-    [entries, query]
-  );
+  const filteredEntries = useMemo(() => {
+    const matched = entries.filter(e => matchesQuery(e, query));
+    // Pinned first, then by savedAt descending. Stable sort preserves the
+    // existing order within each bucket.
+    return matched.slice().sort((a, b) => {
+      const aPinned = a.pinned ? 1 : 0;
+      const bPinned = b.pinned ? 1 : 0;
+      if (aPinned !== bPinned) return bPinned - aPinned;
+      return b.savedAt - a.savedAt;
+    });
+  }, [entries, query]);
 
   const beginEdit = useCallback((entry: HistoryEntry) => {
     setEditingId(entry.id);
@@ -242,7 +249,7 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
           const isEditing = editingId === entry.id;
           const isSelected = selected.includes(entry.id);
           const cardClass =
-            `history-card history-card--${verdict.tone}${compareMode ? ' history-card--selectable' : ''}${isSelected ? ' is-selected' : ''}`;
+            `history-card history-card--${verdict.tone}${compareMode ? ' history-card--selectable' : ''}${isSelected ? ' is-selected' : ''}${entry.pinned ? ' is-pinned' : ''}`;
 
           if (compareMode) {
             return (
@@ -329,7 +336,23 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                 </div>
               </div>
 
+              {entry.pinned && (
+                <span className="history-pin-badge" aria-hidden title="Pinned — won't be evicted">
+                  ★
+                </span>
+              )}
+
               <div className="history-actions">
+                <button
+                  type="button"
+                  className={`history-action${entry.pinned ? ' history-action--active' : ''}`}
+                  onClick={() => togglePin(entry.id)}
+                  aria-label={entry.pinned ? `Unpin ${displayName}` : `Pin ${displayName}`}
+                  aria-pressed={!!entry.pinned}
+                  title={entry.pinned ? 'Unpin' : 'Pin to top'}
+                >
+                  ★
+                </button>
                 <button
                   type="button"
                   className="history-action"

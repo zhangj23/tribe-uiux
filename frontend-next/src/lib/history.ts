@@ -11,6 +11,8 @@ export interface HistoryEntry {
   fileSize: number;
   /** Optional user-provided label (e.g. "Landing hero v3 — higher contrast"). */
   label?: string;
+  /** Pinned entries float to the top and are never evicted by the LRU cap. */
+  pinned?: boolean;
   /** Slim snapshot of the job. `brain_activations` is intentionally dropped to stay within localStorage quota. */
   job: Omit<Job, 'brain_activations'>;
 }
@@ -79,9 +81,39 @@ export function addHistoryEntry(input: {
   };
 
   const current = loadHistory().filter(e => e.id !== entry.id);
-  const next = [entry, ...current].slice(0, MAX_ENTRIES);
-  saveAll(next);
+  // Trim while preserving every pinned entry. New entry slots in at the top
+  // (after pinned entries are pulled forward by the sort that HistoryPanel
+  // applies on render). If we'd overflow, drop the oldest *unpinned* entry.
+  const combined = [entry, ...current];
+  let trimmed = combined;
+  while (trimmed.length > MAX_ENTRIES) {
+    const oldestUnpinnedIdx = (() => {
+      let idx = -1;
+      let oldest = Infinity;
+      for (let i = 0; i < trimmed.length; i++) {
+        const e = trimmed[i];
+        if (e.pinned) continue;
+        if (e.savedAt < oldest) { oldest = e.savedAt; idx = i; }
+      }
+      return idx;
+    })();
+    if (oldestUnpinnedIdx < 0) break; // every entry is pinned — give up
+    trimmed = trimmed.filter((_, i) => i !== oldestUnpinnedIdx);
+  }
+  saveAll(trimmed);
   return entry;
+}
+
+export function togglePinHistoryEntry(id: string): HistoryEntry | null {
+  const entries = loadHistory();
+  let updated: HistoryEntry | null = null;
+  const next = entries.map(e => {
+    if (e.id !== id) return e;
+    updated = { ...e, pinned: !e.pinned };
+    return updated;
+  });
+  saveAll(next);
+  return updated;
 }
 
 export function removeHistoryEntry(id: string) {

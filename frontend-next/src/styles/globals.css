@@ -1901,6 +1901,35 @@ body {
   background: var(--red-dim);
 }
 
+.history-action--active {
+  color: var(--amber);
+  opacity: 1;
+}
+
+.history-action--active:hover {
+  color: var(--amber);
+  background: var(--amber-dim);
+}
+
+/* Pinned badge sits at the top-left of the card so it's always visible
+   even when actions fade out on touch. */
+.history-pin-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.85rem;
+  color: var(--amber);
+  text-shadow: 0 0 8px var(--amber-dim);
+  pointer-events: none;
+}
+
+/* Pinned cards get a faint amber tint along the bottom border so they
+   stand out from the rest of the list at a glance. */
+.history-card.is-pinned {
+  border-top: 1px solid var(--amber-dim);
+  background: linear-gradient(180deg, rgba(255, 179, 71, 0.04) 0%, var(--bg-raised) 60%);
+}
+
 /* ===== History compare mode ===== */
 .history-header-actions {
   display: flex;
