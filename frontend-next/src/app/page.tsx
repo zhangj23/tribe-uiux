@@ -21,6 +21,7 @@ export default function Page() {
   const [view, setView] = useState<View>('upload');
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobData, setJobData] = useState<Job | null>(null);
+  const [activeEntryMeta, setActiveEntryMeta] = useState<{ label?: string; note?: string } | null>(null);
   const [compareEntries, setCompareEntries] = useState<[HistoryEntry, HistoryEntry] | null>(null);
   const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
   const pendingRef = useRef<PendingUpload | null>(null);
@@ -49,6 +50,7 @@ export default function Page() {
 
   const showResults = useCallback((data: Job) => {
     setJobData(data);
+    setActiveEntryMeta(null);
     setView('results');
     history.pushState({ view: 'results' }, '', '#results');
     const pending = pendingRef.current;
@@ -64,10 +66,11 @@ export default function Page() {
     pendingRef.current = null;
   }, []);
 
-  const openFromHistory = useCallback((data: Job) => {
+  const openFromHistory = useCallback((entry: HistoryEntry) => {
     pendingRef.current = null;
     setJobId(null);
-    setJobData(data);
+    setJobData(entry.job as Job);
+    setActiveEntryMeta({ label: entry.label, note: entry.note });
     setView('results');
     history.pushState({ view: 'results' }, '', '#results');
   }, []);
@@ -82,6 +85,7 @@ export default function Page() {
     setJobId(null);
     setJobData(null);
     setCompareEntries(null);
+    setActiveEntryMeta(null);
     pendingRef.current = null;
     setView('upload');
     history.pushState({ view: 'upload' }, '', '');
@@ -144,7 +148,12 @@ export default function Page() {
           />
         )}
         {view === 'results' && jobData && (
-          <ResultsView jobData={jobData} onNewAnalysis={showUpload} />
+          <ResultsView
+            jobData={jobData}
+            onNewAnalysis={showUpload}
+            entryLabel={activeEntryMeta?.label}
+            entryNote={activeEntryMeta?.note}
+          />
         )}
         {view === 'compare' && compareEntries && (
           <CompareView

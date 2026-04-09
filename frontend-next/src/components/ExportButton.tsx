@@ -7,11 +7,12 @@ import type { Job } from '@/types';
 interface Props {
   job: Job;
   label?: string;
+  note?: string;
 }
 
 type ToastState = 'idle' | 'success' | 'error';
 
-export default function ExportButton({ job, label }: Props) {
+export default function ExportButton({ job, label, note }: Props) {
   const [toast, setToast] = useState<ToastState>('idle');
 
   useEffect(() => {
@@ -21,10 +22,10 @@ export default function ExportButton({ job, label }: Props) {
   }, [toast]);
 
   const handleCopy = useCallback(async () => {
-    const text = formatJobAsText(job, { title: label });
+    const text = formatJobAsText(job, { title: label, note });
     const ok = await copyToClipboard(text);
     setToast(ok ? 'success' : 'error');
-  }, [job, label]);
+  }, [job, label, note]);
 
   const disabled = job.friction_score == null;
 

@@ -24,6 +24,8 @@ function verdictFor(score: number | undefined): string {
 
 export interface ExportOptions {
   title?: string;
+  /** User's freeform note attached to this analysis (optional). */
+  note?: string;
 }
 
 /**
@@ -43,6 +45,16 @@ export function formatJobAsText(job: Job, opts: ExportOptions = {}): string {
   if (job.friction_score != null) {
     lines.push(`Friction Score: ${job.friction_score.toFixed(1)} / 10`);
     lines.push(`Verdict: ${verdictFor(job.friction_score)}`);
+    lines.push('');
+  }
+
+  // User's note, if any — surface it right after the headline number so the
+  // recipient sees the human context before the metrics.
+  if (opts.note && opts.note.trim()) {
+    lines.push('Note:');
+    for (const line of opts.note.trim().split(/\r?\n/)) {
+      lines.push(`  ${line}`);
+    }
     lines.push('');
   }
 

@@ -14,8 +14,8 @@ function signed(n: number): string {
 interface Props {
   entryA: HistoryEntry;
   entryB: HistoryEntry;
-  onOpenA: (job: Job) => void;
-  onOpenB: (job: Job) => void;
+  onOpenA: (entry: HistoryEntry) => void;
+  onOpenB: (entry: HistoryEntry) => void;
   onExit: () => void;
 }
 
@@ -106,7 +106,8 @@ export default function CompareView({ entryA, entryB, onOpenA, onOpenB, onExit }
           </div>
           <span className="compare-hero-verdict">{verdictA.label}</span>
           <p className="compare-hero-filename" title={nameOf(entryA)}>{nameOf(entryA)}</p>
-          <button className="compare-hero-open" onClick={() => onOpenA(jobA)}>View full analysis</button>
+          {entryA.note && <p className="compare-hero-note">“{entryA.note}”</p>}
+          <button className="compare-hero-open" onClick={() => onOpenA(entryA)}>View full analysis</button>
         </div>
 
         <div className="compare-hero-middle">
@@ -136,7 +137,8 @@ export default function CompareView({ entryA, entryB, onOpenA, onOpenB, onExit }
           </div>
           <span className="compare-hero-verdict">{verdictB.label}</span>
           <p className="compare-hero-filename" title={nameOf(entryB)}>{nameOf(entryB)}</p>
-          <button className="compare-hero-open" onClick={() => onOpenB(jobB)}>View full analysis</button>
+          {entryB.note && <p className="compare-hero-note">“{entryB.note}”</p>}
+          <button className="compare-hero-open" onClick={() => onOpenB(entryB)}>View full analysis</button>
         </div>
       </section>
 

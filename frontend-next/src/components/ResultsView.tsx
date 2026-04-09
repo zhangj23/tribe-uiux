@@ -14,9 +14,12 @@ import type { Job } from '@/types';
 interface Props {
   jobData: Job;
   onNewAnalysis: () => void;
+  /** Optional context from a stored history entry — used to enrich exports. */
+  entryLabel?: string;
+  entryNote?: string;
 }
 
-export default function ResultsView({ jobData, onNewAnalysis }: Props) {
+export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryNote }: Props) {
   const [timestep, setTimestep] = useState(0);
   const [compact, setCompact] = useState(false);
   const maxStep = Math.max(0, (jobData.brain_activations?.length ?? 1) - 1);
@@ -36,7 +39,7 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
           >
             {compact ? 'Full view' : 'Compact view'}
           </button>
-          <ExportButton job={jobData} />
+          <ExportButton job={jobData} label={entryLabel} note={entryNote} />
           <button className="btn-new" onClick={onNewAnalysis}>+ New Analysis</button>
         </div>
       </div>
@@ -50,6 +53,13 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
           <NextSteps zScores={jobData.z_scores} frictionScore={jobData.friction_score} />
         </div>
       </section>
+
+      {entryNote && (
+        <aside className="results-entry-note" aria-label="Saved note for this analysis">
+          <span className="results-entry-note-eyebrow">Note</span>
+          <p className="results-entry-note-body">{entryNote}</p>
+        </aside>
+      )}
 
       <SpikeTimeline timeseries={jobData.timeseries} timestamps={jobData.timestamps} />
 

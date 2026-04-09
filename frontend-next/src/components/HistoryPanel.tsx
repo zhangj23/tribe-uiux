@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo, KeyboardEvent } from 'react';
 import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
-import type { Job } from '@/types';
 
 function matchesQuery(entry: HistoryEntry, q: string): boolean {
   if (!q) return true;
@@ -51,7 +50,7 @@ function timeAgo(ts: number): string {
 }
 
 interface Props {
-  onOpen: (job: Job) => void;
+  onOpen: (entry: HistoryEntry) => void;
   onCompare?: (a: HistoryEntry, b: HistoryEntry) => void;
 }
 
@@ -313,7 +312,7 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                 <button
                   type="button"
                   className="history-card-open"
-                  onClick={() => onOpen(entry.job as Job)}
+                  onClick={() => onOpen(entry)}
                   aria-label={`Open analysis for ${displayName}`}
                 >
                   <div className="history-score" aria-hidden>
@@ -340,7 +339,7 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                         type="button"
                         className="history-filename"
                         title={displayName}
-                        onClick={() => onOpen(entry.job as Job)}
+                        onClick={() => onOpen(entry)}
                         onDoubleClick={() => beginEdit(entry)}
                       >
                         {displayName}

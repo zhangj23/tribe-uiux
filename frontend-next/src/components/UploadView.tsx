@@ -5,7 +5,6 @@ import HistoryPanel from './HistoryPanel';
 import FrictionSparkline from './FrictionSparkline';
 import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
-import type { Job } from '@/types';
 
 const ALLOWED_EXTENSIONS = new Set([
   '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif',
@@ -34,7 +33,7 @@ function isAllowedFile(file: File): boolean {
 
 interface Props {
   onStartProcessing: (jobId: string, pending?: { fileName: string; fileSize: number }) => void;
-  onOpenHistory: (job: Job) => void;
+  onOpenHistory: (entry: HistoryEntry) => void;
   onCompareHistory: (a: HistoryEntry, b: HistoryEntry) => void;
 }
 
