@@ -91,17 +91,25 @@ export default function MetricGauges({ zScores }: Props) {
       {METRIC_CONFIG.map(({ key, label, tooltip, verdict }) => {
         const z = zScores[key] ?? 0;
         const t = tier(z);
+        const verdictText = verdict(t);
+        const signed = `${z >= 0 ? '+' : ''}${z.toFixed(2)}`;
         const barWidth = Math.min(100, Math.max(5, ((z + 3) / 6) * 100));
         return (
-          <div key={key} className={`gauge gauge--${t}`} title={tooltip}>
+          <div
+            key={key}
+            className={`gauge gauge--${t}`}
+            title={tooltip}
+            role="group"
+            aria-label={`${label}: ${signed} z-score, ${verdictText}. ${tooltip}`}
+          >
             <div className="gauge-header">
               <span className="gauge-name">{label}</span>
-              <span className="gauge-zscore">{z >= 0 ? '+' : ''}{z.toFixed(2)}</span>
+              <span className="gauge-zscore">{signed}</span>
             </div>
             <div className="gauge-bar-track">
               <div className="gauge-bar-fill" style={{ width: `${barWidth}%` }} />
             </div>
-            <span className="gauge-interpretation">{verdict(t)}</span>
+            <span className="gauge-interpretation">{verdictText}</span>
           </div>
         );
       })}

@@ -157,7 +157,12 @@ function Chevron({ open }: { open: boolean }) {
 
 export default function AnalysisText({ text }: Props) {
   const sections = useMemo(() => (text ? parseSections(text) : []), [text]);
-  const [openIds, setOpenIds] = useState<Set<number>>(() => new Set([0]));
+  // Default-open the first two sections so the most important content
+  // (summary + key takeaways) is visible without a click, but leave the
+  // rest collapsed so long analyses stay skimmable.
+  const [openIds, setOpenIds] = useState<Set<number>>(
+    () => new Set([0, 1].filter(i => i < sections.length))
+  );
 
   if (!text || sections.length === 0) {
     return (

@@ -2,7 +2,11 @@
 
 import { useHealth } from '@/hooks/useHealth';
 
-export default function Header() {
+interface Props {
+  onShowShortcuts?: () => void;
+}
+
+export default function Header({ onShowShortcuts }: Props) {
   const health = useHealth();
 
   let dotStyle: React.CSSProperties;
@@ -40,6 +44,17 @@ export default function Header() {
         </div>
       </div>
       <div className="header-right">
+        {onShowShortcuts && (
+          <button
+            type="button"
+            className="header-help"
+            onClick={onShowShortcuts}
+            aria-label="Show keyboard shortcuts"
+            title="Keyboard shortcuts (press ?)"
+          >
+            ?
+          </button>
+        )}
         <div className="status-indicator" role="status" aria-live="polite">
           <span className="status-dot" style={dotStyle} />
           <span className="status-text">{statusText}</span>
