@@ -1,0 +1,107 @@
+import type { Job, ZScores } from '@/types';
+
+const METRIC_LABELS: { key: keyof ZScores; label: string }[] = [
+  { key: 'visual_processing', label: 'Visual Processing' },
+  { key: 'object_recognition', label: 'Object / Face Recognition' },
+  { key: 'reading_language', label: 'Reading & Language' },
+  { key: 'attention_salience', label: 'Attention & Salience' },
+  { key: 'cognitive_load', label: 'Cognitive Load' },
+  { key: 'emotional_response', label: 'Emotional Response' },
+];
+
+function signed(n: number): string {
+  if (n > 0) return `+${n.toFixed(2)}`;
+  return n.toFixed(2);
+}
+
+function verdictFor(score: number | undefined): string {
+  if (score == null) return 'Awaiting analysis';
+  if (score <= 3) return 'Low friction — clean processing';
+  if (score <= 5) return 'Healthy';
+  if (score <= 7) return 'Moderate friction';
+  return 'High friction — overload risk';
+}
+
+export interface ExportOptions {
+  title?: string;
+}
+
+/**
+ * Produce a plain-text summary suitable for pasting into Slack/email.
+ * Uses Markdown-lite formatting that survives Slack's auto-format.
+ */
+export function formatJobAsText(job: Job, opts: ExportOptions = {}): string {
+  const lines: string[] = [];
+  const title = opts.title ?? 'TRIBE UX Analysis';
+  const now = new Date().toLocaleString();
+
+  lines.push(`*${title.toUpperCase()}*`);
+  lines.push(`Generated ${now}`);
+  lines.push('');
+
+  // Friction score
+  if (job.friction_score != null) {
+    lines.push(`Friction Score: ${job.friction_score.toFixed(1)} / 10`);
+    lines.push(`Verdict: ${verdictFor(job.friction_score)}`);
+    lines.push('');
+  }
+
+  // Z-scores table
+  if (job.z_scores) {
+    lines.push('Neural Metrics (z-scores):');
+    for (const { key, label } of METRIC_LABELS) {
+      const v = job.z_scores[key];
+      if (v == null) continue;
+      lines.push(`  • ${label.padEnd(28)} ${signed(v)}`);
+    }
+    lines.push('');
+  }
+
+  // Trim the LLM analysis to avoid huge clipboard payloads.
+  if (job.llm_analysis) {
+    const trimmed = job.llm_analysis.trim().slice(0, 800);
+    const truncated = job.llm_analysis.trim().length > 800;
+    lines.push('AI Analysis:');
+    lines.push(trimmed + (truncated ? '…' : ''));
+    lines.push('');
+  }
+
+  lines.push('— Powered by TRIBE UX Analyzer');
+
+  return lines.join('\n');
+}
+
+/**
+ * Attempt to copy text to clipboard. Returns true on success.
+ * Falls back to a temporary textarea for legacy browsers.
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator === 'undefined') return false;
+
+  // Modern path
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fall through to fallback
+    }
+  }
+
+  // Fallback: execCommand via hidden textarea
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}

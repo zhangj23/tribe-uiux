@@ -1,9 +1,14 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { compareJobs, type MetricDelta } from '@/lib/compareDelta';
 import type { HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
+
+function signed(n: number): string {
+  if (n > 0) return `+${n.toFixed(2)}`;
+  return n.toFixed(2); // includes 0.00 and -1.23 natively
+}
 
 interface Props {
   entryA: HistoryEntry;
@@ -18,8 +23,7 @@ function nameOf(e: HistoryEntry) {
 }
 
 function formatDelta(n: number): string {
-  const prefix = n > 0 ? '+' : '';
-  return `${prefix}${n.toFixed(2)}`;
+  return signed(n);
 }
 
 function frictionVerdict(score: number | null): { label: string; tone: string } {
@@ -44,8 +48,8 @@ function MetricRow({ row }: { row: MetricDelta }) {
   return (
     <tr className={`compare-row compare-row--winner-${row.winner}`}>
       <td className="compare-cell compare-cell--label">{row.label}</td>
-      <td className="compare-cell compare-cell--num">{row.valA >= 0 ? '+' : ''}{row.valA.toFixed(2)}</td>
-      <td className="compare-cell compare-cell--num">{row.valB >= 0 ? '+' : ''}{row.valB.toFixed(2)}</td>
+      <td className="compare-cell compare-cell--num">{signed(row.valA)}</td>
+      <td className="compare-cell compare-cell--num">{signed(row.valB)}</td>
       <td className="compare-cell compare-cell--delta">{formatDelta(row.delta)}σ</td>
       <td className="compare-cell compare-cell--win">
         {row.winner === 'tie' ? '—' : `V${row.winner.toUpperCase()}`}
@@ -58,6 +62,15 @@ export default function CompareView({ entryA, entryB, onOpenA, onOpenB, onExit }
   const jobA = entryA.job as Job;
   const jobB = entryB.job as Job;
   const result = useMemo(() => compareJobs(jobA, jobB), [jobA, jobB]);
+
+  // Escape key closes the compare view.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onExit();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onExit]);
 
   const verdictA = frictionVerdict(result.frictionA);
   const verdictB = frictionVerdict(result.frictionB);
@@ -140,7 +153,7 @@ export default function CompareView({ entryA, entryB, onOpenA, onOpenB, onExit }
                   <th scope="col">Metric</th>
                   <th scope="col">Version A</th>
                   <th scope="col">Version B</th>
-                  <th scope="col">Δ</th>
+                  <th scope="col" title="Z-score change from Version A to Version B">Change (B − A)</th>
                   <th scope="col">Winner</th>
                 </tr>
               </thead>

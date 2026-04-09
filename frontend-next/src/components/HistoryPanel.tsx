@@ -97,7 +97,27 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
     setSelected([]);
   }, []);
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return (
+      <section className="history-panel history-panel--empty" aria-labelledby="history-title">
+        <div className="history-empty">
+          <div className="history-empty-mark" aria-hidden>
+            <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+              <rect x="6" y="10" width="30" height="24" rx="3" stroke="#363b4f" strokeWidth="1.5" />
+              <line x1="12" y1="18" x2="30" y2="18" stroke="#363b4f" strokeWidth="1.2" />
+              <line x1="12" y1="24" x2="26" y2="24" stroke="#363b4f" strokeWidth="1.2" />
+              <line x1="12" y1="30" x2="22" y2="30" stroke="#363b4f" strokeWidth="1.2" />
+            </svg>
+          </div>
+          <h3 id="history-title" className="history-empty-title">No analyses yet</h3>
+          <p className="history-empty-text">
+            Once you analyze a creative, it will appear here. Run a few and you can
+            compare friction scores side-by-side to see which version wins.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   const canCompare = entries.length >= 2 && !!onCompare;
 
@@ -172,7 +192,14 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                   type="button"
                   className="history-card-main history-card-select"
                   onClick={() => toggleSelect(entry.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      toggleSelect(entry.id);
+                    }
+                  }}
                   aria-pressed={isSelected}
+                  aria-label={`${isSelected ? 'Deselect' : 'Select'} ${displayName} for comparison`}
                 >
                   <span className={`history-checkbox${isSelected ? ' is-checked' : ''}`} aria-hidden>
                     {isSelected ? '✓' : ''}

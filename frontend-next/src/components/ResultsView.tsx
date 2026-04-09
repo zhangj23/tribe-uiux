@@ -7,6 +7,7 @@ import TimeseriesChart from './TimeseriesChart';
 import FrictionScore from './FrictionScore';
 import AnalysisText from './AnalysisText';
 import NextSteps from './NextSteps';
+import ExportButton from './ExportButton';
 import type { Job } from '@/types';
 
 interface Props {
@@ -23,7 +24,10 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
     <div className="view-enter">
       <div className="results-header">
         <span className="results-title">ANALYSIS COMPLETE</span>
-        <button className="btn-new" onClick={onNewAnalysis}>+ New Analysis</button>
+        <div className="results-header-actions">
+          <ExportButton job={jobData} />
+          <button className="btn-new" onClick={onNewAnalysis}>+ New Analysis</button>
+        </div>
       </div>
 
       {/* Hero: Friction Score + Next Steps */}
