@@ -18,9 +18,17 @@ interface Props {
   /** Optional context from a stored history entry — used to enrich exports. */
   entryLabel?: string;
   entryNote?: string;
+  /** Send the user to upload view with this job pre-armed as Compare side A. */
+  onCompareWith?: (jobId: string) => void;
 }
 
-export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryNote }: Props) {
+export default function ResultsView({
+  jobData,
+  onNewAnalysis,
+  entryLabel,
+  entryNote,
+  onCompareWith,
+}: Props) {
   const [timestep, setTimestep] = useState(0);
   const [compact, setCompact] = useState(false);
   const maxStep = Math.max(0, (jobData.brain_activations?.length ?? 1) - 1);
@@ -50,6 +58,10 @@ export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryN
   // Find the matching history entry by job id so we know if we can persist.
   const matchingEntry = entries.find(e => e.id === jobData.job_id);
   const canPersistNote = !!matchingEntry;
+  // We can only seed Compare with this analysis if there's at least one *other*
+  // entry to compare against. Otherwise the action would dead-end immediately.
+  const canCompareWith = !!onCompareWith && !!matchingEntry &&
+    entries.filter(e => e.id !== matchingEntry.id).length > 0;
 
   const startEditing = useCallback(() => {
     setDraft(note);
@@ -85,6 +97,16 @@ export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryN
           >
             {compact ? 'Full view' : 'Compact view'}
           </button>
+          {canCompareWith && (
+            <button
+              type="button"
+              className="results-mode-toggle"
+              onClick={() => onCompareWith && matchingEntry && onCompareWith(matchingEntry.id)}
+              title="Compare this run against another from your history"
+            >
+              Compare with…
+            </button>
+          )}
           <ExportButton job={jobData} label={entryLabel} note={note} />
           <button className="btn-new" onClick={onNewAnalysis}>+ New Analysis</button>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef, KeyboardEvent } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, KeyboardEvent } from 'react';
 import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
 
@@ -71,6 +71,9 @@ function timeAgo(ts: number): string {
 interface Props {
   onOpen: (entry: HistoryEntry) => void;
   onCompare?: (a: HistoryEntry, b: HistoryEntry) => void;
+  /** When set, the panel auto-enters compare mode with this entry id pre-selected. */
+  compareSeedId?: string | null;
+  onCompareSeedConsumed?: () => void;
 }
 
 type Mode = 'browse' | 'compare' | 'select';
@@ -97,7 +100,7 @@ function matchesTier(entry: HistoryEntry, tier: TierFilter): boolean {
   return score >= lo && score < hi;
 }
 
-export default function HistoryPanel({ onOpen, onCompare }: Props) {
+export default function HistoryPanel({ onOpen, onCompare, compareSeedId, onCompareSeedConsumed }: Props) {
   const { entries, remove, removeMany, rename, togglePin, setNote, exportBackup, importBackup, clear } = useHistory();
   const [editingId, setEditingId] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -160,6 +163,21 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
   }, [entries, query, typeFilter, tierFilter]);
 
   const filtersActive = typeFilter !== 'all' || tierFilter !== 'all' || query.length > 0;
+
+  // If the parent passes a compare seed id (from "Compare with..." on results),
+  // jump straight into compare mode with the seed pre-selected. We only do
+  // this once per seed; the parent clears the seed afterwards.
+  useEffect(() => {
+    if (!compareSeedId || !onCompare) return;
+    const exists = entries.some(e => e.id === compareSeedId);
+    if (!exists) return;
+    setMode('compare');
+    setSelected([compareSeedId]);
+    onCompareSeedConsumed?.();
+    // Scroll the panel into view so the user sees the selection state.
+    const el = document.querySelector('.history-panel');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [compareSeedId, entries, onCompare, onCompareSeedConsumed]);
 
   const beginEdit = useCallback((entry: HistoryEntry) => {
     setEditingId(entry.id);

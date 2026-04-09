@@ -39,9 +39,19 @@ interface Props {
   onCompareHistory: (a: HistoryEntry, b: HistoryEntry) => void;
   /** Open a synthetic job in the results view (for first-time visitors). */
   onOpenDemo?: (job: Job) => void;
+  /** When set, the history panel auto-enters compare mode with this id pre-selected. */
+  compareSeedId?: string | null;
+  onCompareSeedConsumed?: () => void;
 }
 
-export default function UploadView({ onStartProcessing, onOpenHistory, onCompareHistory, onOpenDemo }: Props) {
+export default function UploadView({
+  onStartProcessing,
+  onOpenHistory,
+  onCompareHistory,
+  onOpenDemo,
+  compareSeedId,
+  onCompareSeedConsumed,
+}: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
@@ -242,7 +252,12 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
         </button>
       )}
 
-      <HistoryPanel onOpen={onOpenHistory} onCompare={onCompareHistory} />
+      <HistoryPanel
+        onOpen={onOpenHistory}
+        onCompare={onCompareHistory}
+        compareSeedId={compareSeedId}
+        onCompareSeedConsumed={onCompareSeedConsumed}
+      />
     </div>
   );
 }

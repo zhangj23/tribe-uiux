@@ -25,6 +25,7 @@ export default function Page() {
   const [jobData, setJobData] = useState<Job | null>(null);
   const [activeEntryMeta, setActiveEntryMeta] = useState<{ label?: string; note?: string } | null>(null);
   const [compareEntries, setCompareEntries] = useState<[HistoryEntry, HistoryEntry] | null>(null);
+  const [compareSeedId, setCompareSeedId] = useState<string | null>(null);
   const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
   const pendingRef = useRef<PendingUpload | null>(null);
 
@@ -94,8 +95,21 @@ export default function Page() {
 
   const showCompare = useCallback((a: HistoryEntry, b: HistoryEntry) => {
     setCompareEntries([a, b]);
+    setCompareSeedId(null);
     setView('compare');
     history.pushState({ view: 'compare' }, '', '#compare');
+  }, []);
+
+  const startCompareWith = useCallback((seedJobId: string) => {
+    // Send the user back to the upload view with the history panel
+    // pre-armed for "compare two", first slot already filled.
+    setCompareSeedId(seedJobId);
+    setJobId(null);
+    setJobData(null);
+    setActiveEntryMeta(null);
+    pendingRef.current = null;
+    setView('upload');
+    history.pushState({ view: 'upload' }, '', '');
   }, []);
 
   const showUpload = useCallback(() => {
@@ -103,6 +117,7 @@ export default function Page() {
     setJobData(null);
     setCompareEntries(null);
     setActiveEntryMeta(null);
+    setCompareSeedId(null);
     pendingRef.current = null;
     setView('upload');
     history.pushState({ view: 'upload' }, '', '');
@@ -178,6 +193,8 @@ export default function Page() {
             onOpenHistory={openFromHistory}
             onCompareHistory={showCompare}
             onOpenDemo={openDemo}
+            compareSeedId={compareSeedId}
+            onCompareSeedConsumed={() => setCompareSeedId(null)}
           />
         )}
         {view === 'processing' && jobId && (
@@ -193,6 +210,7 @@ export default function Page() {
             onNewAnalysis={showUpload}
             entryLabel={activeEntryMeta?.label}
             entryNote={activeEntryMeta?.note}
+            onCompareWith={startCompareWith}
           />
         )}
         {view === 'compare' && compareEntries && (
