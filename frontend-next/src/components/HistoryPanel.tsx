@@ -56,12 +56,14 @@ interface Props {
 }
 
 export default function HistoryPanel({ onOpen, onCompare }: Props) {
-  const { entries, remove, rename, togglePin, clear } = useHistory();
+  const { entries, remove, rename, togglePin, setNote, clear } = useHistory();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [compareMode, setCompareMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [query, setQuery] = useState('');
+  const [openNoteId, setOpenNoteId] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState('');
 
   const filteredEntries = useMemo(() => {
     const matched = entries.filter(e => matchesQuery(e, query));
@@ -101,6 +103,22 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
       cancelEdit();
     }
   }, [commitEdit, cancelEdit]);
+
+  const beginNote = useCallback((entry: HistoryEntry) => {
+    setOpenNoteId(entry.id);
+    setNoteDraft(entry.note ?? '');
+  }, []);
+
+  const closeNote = useCallback(() => {
+    setOpenNoteId(null);
+    setNoteDraft('');
+  }, []);
+
+  const saveNote = useCallback(() => {
+    if (openNoteId == null) return;
+    setNote(openNoteId, noteDraft);
+    closeNote();
+  }, [openNoteId, noteDraft, setNote, closeNote]);
 
   const toggleSelect = useCallback((id: string) => {
     setSelected(prev => {
@@ -355,6 +373,20 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                 </button>
                 <button
                   type="button"
+                  className={`history-action${entry.note ? ' history-action--active' : ''}`}
+                  onClick={() => beginNote(entry)}
+                  aria-label={entry.note ? `Edit note for ${displayName}` : `Add note for ${displayName}`}
+                  title={entry.note ? 'Edit note' : 'Add note'}
+                >
+                  {/* Pencil-on-paper glyph; the css class drives the active color */}
+                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden>
+                    <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" />
+                    <line x1="4" y1="5" x2="8" y2="5" stroke="currentColor" strokeWidth="1.2" />
+                    <line x1="4" y1="7" x2="8" y2="7" stroke="currentColor" strokeWidth="1.2" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
                   className="history-action"
                   onClick={() => beginEdit(entry)}
                   aria-label={`Rename ${displayName}`}
@@ -372,6 +404,49 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
                   ×
                 </button>
               </div>
+
+              {/* Inline note editor / preview */}
+              {openNoteId === entry.id ? (
+                <div className="history-note history-note--editing">
+                  <textarea
+                    className="history-note-input"
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') { e.preventDefault(); closeNote(); }
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        saveNote();
+                      }
+                    }}
+                    placeholder="Add a note: client feedback, version notes, todos…"
+                    autoFocus
+                    rows={3}
+                    maxLength={500}
+                    aria-label="Note for this analysis"
+                  />
+                  <div className="history-note-actions">
+                    <span className="history-note-hint">⌘/Ctrl + Enter to save · Esc to cancel</span>
+                    <button type="button" className="history-clear" onClick={closeNote}>Cancel</button>
+                    <button
+                      type="button"
+                      className="history-compare-btn history-compare-btn--primary"
+                      onClick={saveNote}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              ) : entry.note ? (
+                <button
+                  type="button"
+                  className="history-note history-note--preview"
+                  onClick={() => beginNote(entry)}
+                  aria-label="Edit note"
+                >
+                  {entry.note}
+                </button>
+              ) : null}
             </li>
           );
         })}

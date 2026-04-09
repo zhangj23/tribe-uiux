@@ -11,6 +11,8 @@ export interface HistoryEntry {
   fileSize: number;
   /** Optional user-provided label (e.g. "Landing hero v3 — higher contrast"). */
   label?: string;
+  /** Optional freeform user note (markdown-ish, but rendered as plain text). */
+  note?: string;
   /** Pinned entries float to the top and are never evicted by the LRU cap. */
   pinned?: boolean;
   /** Slim snapshot of the job. `brain_activations` is intentionally dropped to stay within localStorage quota. */
@@ -128,6 +130,19 @@ export function renameHistoryEntry(id: string, label: string): HistoryEntry | nu
     if (e.id !== id) return e;
     const trimmed = label.trim();
     updated = { ...e, label: trimmed || undefined };
+    return updated;
+  });
+  saveAll(next);
+  return updated;
+}
+
+export function setHistoryNote(id: string, note: string): HistoryEntry | null {
+  const entries = loadHistory();
+  let updated: HistoryEntry | null = null;
+  const next = entries.map(e => {
+    if (e.id !== id) return e;
+    const trimmed = note.trim();
+    updated = { ...e, note: trimmed || undefined };
     return updated;
   });
   saveAll(next);

@@ -1930,6 +1930,74 @@ body {
   background: linear-gradient(180deg, rgba(255, 179, 71, 0.04) 0%, var(--bg-raised) 60%);
 }
 
+/* ===== History entry notes ===== */
+.history-note {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-sm);
+  padding: 10px 12px;
+  background: var(--bg-deep);
+  border: var(--border);
+  border-left: 2px solid var(--phosphor-dim);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.history-note--preview {
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.history-note--preview:hover {
+  border-left-color: var(--phosphor);
+  background: var(--bg-surface);
+}
+
+.history-note--editing {
+  background: var(--bg-surface);
+  border-left-color: var(--phosphor);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.history-note-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  resize: vertical;
+  min-height: 60px;
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.history-note-input::placeholder { color: var(--text-dim); }
+
+.history-note-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: var(--border);
+  flex-wrap: wrap;
+}
+
+.history-note-hint {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
 /* ===== History compare mode ===== */
 .history-header-actions {
   display: flex;
