@@ -947,12 +947,191 @@ body {
   min-width: 0;
 }
 
+.next-step-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
 .next-step-label {
   font-family: var(--font-body);
   font-weight: 500;
   font-size: 0.95rem;
   color: var(--text-primary);
   letter-spacing: 0.005em;
+}
+
+.next-step-severity {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.next-step-severity--mild {
+  color: var(--text-dim);
+  border-color: var(--dim);
+}
+
+.next-step-severity--strong {
+  color: var(--amber);
+  background: var(--amber-dim);
+}
+
+.next-step-severity--critical {
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+/* ============ SPIKE TIMELINE ============ */
+.spike-timeline {
+  max-width: 1600px;
+  margin: 0 auto var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--bg-raised);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.spike-timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.spike-timeline-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--phosphor);
+}
+
+.spike-timeline-sub {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.spike-timeline-track {
+  position: relative;
+}
+
+.spike-timeline-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.spike-timeline-line {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(
+    90deg,
+    transparent 0,
+    var(--dim) 1px,
+    transparent 2px,
+    transparent 100%
+  );
+  border-top: var(--border);
+  border-bottom: var(--border);
+  margin-top: 6px;
+}
+
+.spike-timeline-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--dim);
+}
+
+.spike-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spike-dot:hover,
+.spike-dot:focus-visible {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.spike-dot--phosphor {
+  background: var(--phosphor);
+  box-shadow: 0 0 12px var(--phosphor-dim);
+}
+.spike-dot--cyan {
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan-dim);
+}
+.spike-dot--amber {
+  background: var(--amber);
+  box-shadow: 0 0 12px var(--amber-dim);
+}
+.spike-dot--red {
+  background: var(--red);
+  box-shadow: 0 0 16px rgba(255, 77, 106, 0.5);
+}
+
+.spike-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+
+.spike-tooltip strong { color: var(--phosphor); font-weight: 500; }
+.spike-tooltip span { color: var(--text-secondary); font-size: 0.6rem; }
+
+.spike-dot:hover .spike-tooltip,
+.spike-dot:focus-visible .spike-tooltip {
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .spike-timeline { padding: var(--space-md); }
+  .spike-timeline-header { flex-direction: column; gap: 4px; align-items: flex-start; }
 }
 
 .next-step--phosphor .next-step-label { color: var(--phosphor); }

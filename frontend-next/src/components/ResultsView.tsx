@@ -7,6 +7,7 @@ import TimeseriesChart from './TimeseriesChart';
 import FrictionScore from './FrictionScore';
 import AnalysisText from './AnalysisText';
 import NextSteps from './NextSteps';
+import SpikeTimeline from './SpikeTimeline';
 import ExportButton from './ExportButton';
 import type { Job } from '@/types';
 
@@ -49,6 +50,8 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
           <NextSteps zScores={jobData.z_scores} frictionScore={jobData.friction_score} />
         </div>
       </section>
+
+      <SpikeTimeline timeseries={jobData.timeseries} timestamps={jobData.timestamps} />
 
       {!compact && (
         <div className="results-grid">
