@@ -1,10 +1,18 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useHistory } from '@/hooks/useHistory';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+}
+
+function toneFor(score: number): string {
+  if (score <= 3) return 'phosphor';
+  if (score <= 5) return 'cyan';
+  if (score <= 7) return 'amber';
+  return 'red';
 }
 
 const SHORTCUTS: { keys: string[]; label: string }[] = [
@@ -17,6 +25,7 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
 
 export default function KeyboardHelp({ open, onClose }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const { entries } = useHistory();
 
   useEffect(() => {
     if (!open) return;
@@ -25,6 +34,10 @@ export default function KeyboardHelp({ open, onClose }: Props) {
   }, [open]);
 
   if (!open) return null;
+
+  const recent = entries
+    .filter(e => typeof e.job.friction_score === 'number')
+    .slice(0, 3);
 
   return (
     <div
@@ -64,6 +77,26 @@ export default function KeyboardHelp({ open, onClose }: Props) {
             </li>
           ))}
         </ul>
+
+        {recent.length > 0 && (
+          <section className="kbd-recent" aria-label="Most recent friction scores">
+            <h3 className="kbd-recent-title">Recent runs</h3>
+            <ul className="kbd-recent-list">
+              {recent.map(entry => {
+                const score = entry.job.friction_score!;
+                const tone = toneFor(score);
+                const name = entry.label || entry.fileName;
+                return (
+                  <li key={entry.id} className={`kbd-recent-item kbd-recent-item--${tone}`}>
+                    <span className="kbd-recent-score">{score.toFixed(1)}</span>
+                    <span className="kbd-recent-name" title={name}>{name}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
         <footer className="kbd-dialog-footer">
           Press <kbd className="kbd">?</kbd> or <kbd className="kbd">Esc</kbd> to close.
         </footer>
