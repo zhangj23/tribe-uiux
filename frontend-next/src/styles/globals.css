@@ -106,6 +106,41 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-md);
+  min-width: 0;
+}
+
+/* When the brand is a button (i.e. we're not on the upload view) it gets a
+   subtle hover state and a focusable outline. We strip the default <button>
+   chrome so it visually matches the static brand block. */
+button.header-left {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+button.header-left.header-left--link {
+  cursor: pointer;
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  margin: -4px -8px;
+  transition: background 0.2s;
+}
+
+button.header-left.header-left--link:hover {
+  background: var(--phosphor-glow);
+}
+
+button.header-left.header-left--link:hover .logo-mark {
+  opacity: 1;
+}
+
+button.header-left.header-left--link:focus-visible {
+  outline: 2px solid var(--phosphor);
+  outline-offset: 2px;
 }
 
 .logo-mark {

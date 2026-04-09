@@ -131,7 +131,11 @@ export default function Page() {
     <>
       <div className="scanline-overlay" />
       <div className="grain-overlay" />
-      <Header onShowShortcuts={() => setKeyboardHelpOpen(true)} />
+      <Header
+        onShowShortcuts={() => setKeyboardHelpOpen(true)}
+        onHome={showUpload}
+        isHome={view === 'upload'}
+      />
       <main>
         {view === 'upload' && (
           <UploadView

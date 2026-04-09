@@ -4,10 +4,15 @@ import { useHealth } from '@/hooks/useHealth';
 
 interface Props {
   onShowShortcuts?: () => void;
+  /** Click handler for the logo / brand mark. When omitted (or on the
+   * upload view itself) the brand renders as a static element. */
+  onHome?: () => void;
+  isHome?: boolean;
 }
 
-export default function Header({ onShowShortcuts }: Props) {
+export default function Header({ onShowShortcuts, onHome, isHome }: Props) {
   const health = useHealth();
+  const homeable = !!onHome && !isHome;
 
   let dotStyle: React.CSSProperties;
   let statusText: string;
@@ -29,20 +34,36 @@ export default function Header({ onShowShortcuts }: Props) {
     statusText = 'LOADING MODEL';
   }
 
+  const Brand = (
+    <>
+      <svg className="logo-mark" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden>
+        <ellipse cx="14" cy="14" rx="11" ry="9" stroke="#39ff85" strokeWidth="1.2" opacity="0.6" />
+        <ellipse cx="14" cy="14" rx="6" ry="5" stroke="#00d4ff" strokeWidth="1" opacity="0.4" />
+        <circle cx="14" cy="14" r="2" fill="#39ff85" opacity="0.8" />
+        <line x1="14" y1="5" x2="14" y2="23" stroke="#363b4f" strokeWidth="0.8" strokeDasharray="2 2" />
+      </svg>
+      <div className="header-title">
+        <h1><span className="title-accent">TRIBE</span> UX</h1>
+        <p className="header-subtitle">Neural Response Analyzer v0.1</p>
+      </div>
+    </>
+  );
+
   return (
     <header className="app-header">
-      <div className="header-left">
-        <svg className="logo-mark" width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <ellipse cx="14" cy="14" rx="11" ry="9" stroke="#39ff85" strokeWidth="1.2" opacity="0.6" />
-          <ellipse cx="14" cy="14" rx="6" ry="5" stroke="#00d4ff" strokeWidth="1" opacity="0.4" />
-          <circle cx="14" cy="14" r="2" fill="#39ff85" opacity="0.8" />
-          <line x1="14" y1="5" x2="14" y2="23" stroke="#363b4f" strokeWidth="0.8" strokeDasharray="2 2" />
-        </svg>
-        <div className="header-title">
-          <h1><span className="title-accent">TRIBE</span> UX</h1>
-          <p className="header-subtitle">Neural Response Analyzer v0.1</p>
-        </div>
-      </div>
+      {homeable ? (
+        <button
+          type="button"
+          className="header-left header-left--link"
+          onClick={onHome}
+          aria-label="Back to upload"
+          title="Back to upload"
+        >
+          {Brand}
+        </button>
+      ) : (
+        <div className="header-left">{Brand}</div>
+      )}
       <div className="header-right">
         {onShowShortcuts && (
           <button
