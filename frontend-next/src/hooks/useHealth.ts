@@ -3,15 +3,38 @@
 import { useState, useEffect } from 'react';
 import type { HealthResponse } from '@/types';
 
-export function useHealth() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
+export type HealthStatus =
+  | { state: 'loading' }
+  | { state: 'ok'; data: HealthResponse }
+  | { state: 'offline' };
+
+export function useHealth(): HealthStatus {
+  const [status, setStatus] = useState<HealthStatus>({ state: 'loading' });
 
   useEffect(() => {
-    fetch('/api/health')
-      .then(r => r.json())
-      .then((data: HealthResponse) => setHealth(data))
-      .catch(() => {});
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    fetch('/api/health', { signal: controller.signal })
+      .then(r => {
+        if (!r.ok) throw new Error('health check failed');
+        return r.json();
+      })
+      .then((data: HealthResponse) => {
+        if (!cancelled) setStatus({ state: 'ok', data });
+      })
+      .catch(() => {
+        if (!cancelled) setStatus({ state: 'offline' });
+      })
+      .finally(() => clearTimeout(timeout));
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timeout);
+    };
   }, []);
 
-  return health;
+  return status;
 }

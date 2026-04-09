@@ -5,19 +5,24 @@ import { useHealth } from '@/hooks/useHealth';
 export default function Header() {
   const health = useHealth();
 
-  let dotStyle: React.CSSProperties = { background: 'var(--phosphor)', boxShadow: '0 0 8px var(--phosphor-dim)' };
-  let statusText = 'LOADING...';
+  let dotStyle: React.CSSProperties;
+  let statusText: string;
 
-  if (health) {
-    if (health.tribe_mock_mode) {
-      dotStyle = { background: 'var(--amber)', boxShadow: '0 0 8px var(--amber-dim)' };
-      statusText = 'MOCK MODE';
-    } else {
-      dotStyle = health.model_loaded
-        ? { background: 'var(--phosphor)', boxShadow: '0 0 8px var(--phosphor-dim)' }
-        : { background: 'var(--cyan)', boxShadow: '0 0 8px var(--cyan-dim)' };
-      statusText = health.model_loaded ? 'MODEL READY' : 'LOADING...';
-    }
+  if (health.state === 'loading') {
+    dotStyle = { background: 'var(--text-dim)', boxShadow: 'none' };
+    statusText = 'CONNECTING...';
+  } else if (health.state === 'offline') {
+    dotStyle = { background: 'var(--red)', boxShadow: '0 0 8px var(--red-dim)' };
+    statusText = 'OFFLINE';
+  } else if (health.data.tribe_mock_mode) {
+    dotStyle = { background: 'var(--amber)', boxShadow: '0 0 8px var(--amber-dim)' };
+    statusText = 'MOCK MODE';
+  } else if (health.data.model_loaded) {
+    dotStyle = { background: 'var(--phosphor)', boxShadow: '0 0 8px var(--phosphor-dim)' };
+    statusText = 'MODEL READY';
+  } else {
+    dotStyle = { background: 'var(--cyan)', boxShadow: '0 0 8px var(--cyan-dim)' };
+    statusText = 'LOADING MODEL';
   }
 
   return (
@@ -35,7 +40,7 @@ export default function Header() {
         </div>
       </div>
       <div className="header-right">
-        <div className="status-indicator">
+        <div className="status-indicator" role="status" aria-live="polite">
           <span className="status-dot" style={dotStyle} />
           <span className="status-text">{statusText}</span>
         </div>

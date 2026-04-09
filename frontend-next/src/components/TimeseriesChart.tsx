@@ -80,7 +80,7 @@ export default function TimeseriesChart({ timeseries, timestamps }: Props) {
             backgroundColor: '#191c25',
             titleColor: '#e8eaf0',
             bodyColor: '#8b90a0',
-            borderColor: '#2a2f3e',
+            borderColor: '#363b4f',
             borderWidth: 1,
             titleFont: { family: '"DM Mono", monospace', size: 11 },
             bodyFont: { family: '"DM Mono", monospace', size: 10 },
@@ -93,13 +93,13 @@ export default function TimeseriesChart({ timeseries, timestamps }: Props) {
         scales: {
           x: {
             grid: { color: '#1e2130' },
-            ticks: { color: '#4a4f62', font: { family: '"DM Mono", monospace', size: 9 }, maxTicksLimit: 10 },
-            title: { display: true, text: 'Time (s)', color: '#4a4f62', font: { family: '"DM Mono", monospace', size: 10 } },
+            ticks: { color: '#8b90a0', font: { family: '"DM Mono", monospace', size: 9 }, maxTicksLimit: 10 },
+            title: { display: true, text: 'Time (s)', color: '#8b90a0', font: { family: '"DM Mono", monospace', size: 10 } },
           },
           y: {
             grid: { color: '#1e2130' },
-            ticks: { color: '#4a4f62', font: { family: '"DM Mono", monospace', size: 9 } },
-            title: { display: true, text: 'Activation', color: '#4a4f62', font: { family: '"DM Mono", monospace', size: 10 } },
+            ticks: { color: '#8b90a0', font: { family: '"DM Mono", monospace', size: 9 } },
+            title: { display: true, text: 'Activation', color: '#8b90a0', font: { family: '"DM Mono", monospace', size: 10 } },
           },
         },
       },

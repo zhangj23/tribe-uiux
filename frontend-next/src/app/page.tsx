@@ -1,18 +1,25 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import UploadView from '@/components/UploadView';
 import ProcessingView from '@/components/ProcessingView';
 import ResultsView from '@/components/ResultsView';
+import { addHistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
 
 type View = 'upload' | 'processing' | 'results';
+
+interface PendingUpload {
+  fileName: string;
+  fileSize: number;
+}
 
 export default function Page() {
   const [view, setView] = useState<View>('upload');
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobData, setJobData] = useState<Job | null>(null);
+  const pendingRef = useRef<PendingUpload | null>(null);
 
   // Browser back/forward support
   useEffect(() => {
@@ -27,7 +34,8 @@ export default function Page() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const startProcessing = useCallback((id: string) => {
+  const startProcessing = useCallback((id: string, pending?: PendingUpload) => {
+    pendingRef.current = pending ?? null;
     setJobId(id);
     setJobData(null);
     setView('processing');
@@ -39,11 +47,31 @@ export default function Page() {
     setJobData(data);
     setView('results');
     history.pushState({ view: 'results' }, '', '#results');
+    const pending = pendingRef.current;
+    try {
+      addHistoryEntry({
+        job: data,
+        fileName: pending?.fileName || 'Untitled analysis',
+        fileSize: pending?.fileSize ?? 0,
+      });
+    } catch {
+      // non-fatal
+    }
+    pendingRef.current = null;
+  }, []);
+
+  const openFromHistory = useCallback((data: Job) => {
+    pendingRef.current = null;
+    setJobId(null);
+    setJobData(data);
+    setView('results');
+    history.pushState({ view: 'results' }, '', '#results');
   }, []);
 
   const showUpload = useCallback(() => {
     setJobId(null);
     setJobData(null);
+    pendingRef.current = null;
     setView('upload');
     history.pushState({ view: 'upload' }, '', '');
   }, []);
@@ -55,7 +83,10 @@ export default function Page() {
       <Header />
       <main>
         {view === 'upload' && (
-          <UploadView onStartProcessing={startProcessing} />
+          <UploadView
+            onStartProcessing={startProcessing}
+            onOpenHistory={openFromHistory}
+          />
         )}
         {view === 'processing' && jobId && (
           <ProcessingView

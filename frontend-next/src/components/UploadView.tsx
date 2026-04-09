@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, DragEvent, ChangeEvent } from 'react';
+import HistoryPanel from './HistoryPanel';
+import type { Job } from '@/types';
 
 const ALLOWED_EXTENSIONS = new Set([
   '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif',
@@ -28,10 +30,11 @@ function isAllowedFile(file: File): boolean {
 }
 
 interface Props {
-  onStartProcessing: (jobId: string) => void;
+  onStartProcessing: (jobId: string, pending?: { fileName: string; fileSize: number }) => void;
+  onOpenHistory: (job: Job) => void;
 }
 
-export default function UploadView({ onStartProcessing }: Props) {
+export default function UploadView({ onStartProcessing, onOpenHistory }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
@@ -39,6 +42,10 @@ export default function UploadView({ onStartProcessing }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectFile = useCallback((file: File) => {
+    if (uploading) {
+      setError('An upload is already in progress. Please wait or cancel it.');
+      return;
+    }
     setError('');
     if (!isAllowedFile(file)) {
       setError('File type not supported. Please upload an image, video, or audio file.');
@@ -49,7 +56,7 @@ export default function UploadView({ onStartProcessing }: Props) {
       return;
     }
     setSelectedFile(file);
-  }, []);
+  }, [uploading]);
 
   const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -80,11 +87,16 @@ export default function UploadView({ onStartProcessing }: Props) {
       const data = await resp.json();
       if (!resp.ok) {
         setError(data.detail || 'Upload failed. Please try again.');
+        setSelectedFile(null);
         return;
       }
-      onStartProcessing(data.job_id);
+      onStartProcessing(data.job_id, {
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size,
+      });
     } catch {
       setError('Upload failed. Please check your connection and try again.');
+      setSelectedFile(null);
     } finally {
       setUploading(false);
     }
@@ -94,12 +106,13 @@ export default function UploadView({ onStartProcessing }: Props) {
     <div className="upload-container view-enter">
       <div className="upload-hero">
         <h2 className="upload-title">
-          <span className="title-line">Analyze <em>Neural</em></span>
-          <span className="title-line">Response to Media</span>
+          <span className="title-line">See what your</span>
+          <span className="title-line">creative <em>actually</em> triggers.</span>
         </h2>
         <p className="upload-desc">
-          Upload an image, video, or audio file to simulate how the human brain responds.
-          Powered by Meta&apos;s TRIBE v2 brain encoding model.
+          Drop in an ad, hero image, product video, or voiceover. We simulate how a human
+          brain would respond using Meta&apos;s TRIBE v2 encoding model, then tell you where
+          attention grabs, where cognitive load spikes, and what to change.
         </p>
       </div>
 
@@ -159,6 +172,8 @@ export default function UploadView({ onStartProcessing }: Props) {
           </button>
         </div>
       )}
+
+      <HistoryPanel onOpen={onOpenHistory} />
     </div>
   );
 }

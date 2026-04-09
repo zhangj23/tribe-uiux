@@ -41,8 +41,32 @@ interface Props {
 }
 
 export default function ProcessingView({ jobId, onComplete, onCancel }: Props) {
-  const { progress, stage } = usePolling(jobId, onComplete);
+  const { progress, stage, error } = usePolling(jobId, onComplete);
   const pct = Math.round(progress * 100);
+
+  if (error) {
+    return (
+      <div className="processing-container view-enter">
+        <div className="processing-error">
+          <div className="processing-error-mark">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden>
+              <circle cx="28" cy="28" r="25" stroke="#ff4d6a" strokeWidth="1.5" opacity="0.6" />
+              <path d="M20 20l16 16M36 20L20 36" stroke="#ff4d6a" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <h2 className="processing-error-title">
+            {error.kind === 'network' ? 'Connection lost' : 'Analysis failed'}
+          </h2>
+          <p className="processing-error-message">{error.message}</p>
+          <div className="processing-error-actions">
+            <button className="btn-analyze" onClick={onCancel}>
+              Back to upload <span className="btn-arrow">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="processing-container view-enter">
