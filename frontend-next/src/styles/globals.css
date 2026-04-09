@@ -1712,6 +1712,37 @@ button.header-left.header-left--link:focus-visible {
   width: 100%;
 }
 
+/* ============ DEMO RUN LINK ============
+   Shown only on the empty upload state — invites first-time visitors
+   to see what a finished analysis looks like. */
+.demo-run-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  background: none;
+  border: 1px dashed var(--phosphor-dim);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.demo-run-link strong {
+  color: var(--phosphor);
+  font-weight: 500;
+}
+
+.demo-run-link:hover {
+  border-color: var(--phosphor);
+  background: var(--phosphor-glow);
+  color: var(--text-primary);
+}
+
 /* ============ HISTORY PANEL ============ */
 .history-panel {
   width: 100%;

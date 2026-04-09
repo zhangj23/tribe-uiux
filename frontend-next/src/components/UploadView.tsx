@@ -4,7 +4,9 @@ import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from
 import HistoryPanel from './HistoryPanel';
 import FrictionSparkline from './FrictionSparkline';
 import { useHistory } from '@/hooks/useHistory';
+import { makeDemoJob } from '@/lib/demoJob';
 import type { HistoryEntry } from '@/lib/history';
+import type { Job } from '@/types';
 
 const ALLOWED_EXTENSIONS = new Set([
   '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.gif',
@@ -35,9 +37,11 @@ interface Props {
   onStartProcessing: (jobId: string, pending?: { fileName: string; fileSize: number }) => void;
   onOpenHistory: (entry: HistoryEntry) => void;
   onCompareHistory: (a: HistoryEntry, b: HistoryEntry) => void;
+  /** Open a synthetic job in the results view (for first-time visitors). */
+  onOpenDemo?: (job: Job) => void;
 }
 
-export default function UploadView({ onStartProcessing, onOpenHistory, onCompareHistory }: Props) {
+export default function UploadView({ onStartProcessing, onOpenHistory, onCompareHistory, onOpenDemo }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
@@ -205,7 +209,7 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
       />
 
       {error && (
-        <div className="error-banner" role="alert" aria-live="assertive">
+        <div className="error-banner" role="status" aria-live="polite">
           {error}
         </div>
       )}
@@ -226,6 +230,16 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
             )}
           </button>
         </div>
+      )}
+
+      {historyEntries.length === 0 && onOpenDemo && (
+        <button
+          type="button"
+          className="demo-run-link"
+          onClick={() => onOpenDemo(makeDemoJob())}
+        >
+          New here? <strong>Try a sample analysis →</strong>
+        </button>
       )}
 
       <HistoryPanel onOpen={onOpenHistory} onCompare={onCompareHistory} />

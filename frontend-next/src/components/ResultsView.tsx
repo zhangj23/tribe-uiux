@@ -35,6 +35,7 @@ export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryN
             className={`results-mode-toggle${compact ? ' is-active' : ''}`}
             onClick={() => setCompact(c => !c)}
             aria-pressed={compact}
+            aria-label={compact ? 'Switch to full detail view' : 'Switch to compact presentation view'}
             title={compact ? 'Switch to full detail view' : 'Switch to compact presentation view'}
           >
             {compact ? 'Full view' : 'Compact view'}

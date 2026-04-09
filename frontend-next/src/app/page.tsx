@@ -79,6 +79,18 @@ export default function Page() {
     history.pushState({ view: 'results' }, '', '#results');
   }, []);
 
+  const openDemo = useCallback((data: Job) => {
+    pendingRef.current = null;
+    setJobId(null);
+    setJobData(data);
+    setActiveEntryMeta({
+      label: 'Sample analysis',
+      note: 'Demo data — no real upload was processed.',
+    });
+    setView('results');
+    history.pushState({ view: 'results' }, '', '#results');
+  }, []);
+
   const showCompare = useCallback((a: HistoryEntry, b: HistoryEntry) => {
     setCompareEntries([a, b]);
     setView('compare');
@@ -147,6 +159,7 @@ export default function Page() {
             onStartProcessing={startProcessing}
             onOpenHistory={openFromHistory}
             onCompareHistory={showCompare}
+            onOpenDemo={openDemo}
           />
         )}
         {view === 'processing' && jobId && (
