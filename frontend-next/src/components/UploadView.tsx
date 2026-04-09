@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, DragEvent, ChangeEvent } from 'react';
 import HistoryPanel from './HistoryPanel';
+import type { HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -32,9 +33,10 @@ function isAllowedFile(file: File): boolean {
 interface Props {
   onStartProcessing: (jobId: string, pending?: { fileName: string; fileSize: number }) => void;
   onOpenHistory: (job: Job) => void;
+  onCompareHistory: (a: HistoryEntry, b: HistoryEntry) => void;
 }
 
-export default function UploadView({ onStartProcessing, onOpenHistory }: Props) {
+export default function UploadView({ onStartProcessing, onOpenHistory, onCompareHistory }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
@@ -173,7 +175,7 @@ export default function UploadView({ onStartProcessing, onOpenHistory }: Props) 
         </div>
       )}
 
-      <HistoryPanel onOpen={onOpenHistory} />
+      <HistoryPanel onOpen={onOpenHistory} onCompare={onCompareHistory} />
     </div>
   );
 }

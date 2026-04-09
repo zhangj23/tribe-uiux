@@ -5,10 +5,11 @@ import Header from '@/components/Header';
 import UploadView from '@/components/UploadView';
 import ProcessingView from '@/components/ProcessingView';
 import ResultsView from '@/components/ResultsView';
-import { addHistoryEntry } from '@/lib/history';
+import CompareView from '@/components/CompareView';
+import { addHistoryEntry, type HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
 
-type View = 'upload' | 'processing' | 'results';
+type View = 'upload' | 'processing' | 'results' | 'compare';
 
 interface PendingUpload {
   fileName: string;
@@ -19,6 +20,7 @@ export default function Page() {
   const [view, setView] = useState<View>('upload');
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobData, setJobData] = useState<Job | null>(null);
+  const [compareEntries, setCompareEntries] = useState<[HistoryEntry, HistoryEntry] | null>(null);
   const pendingRef = useRef<PendingUpload | null>(null);
 
   // Browser back/forward support
@@ -68,9 +70,16 @@ export default function Page() {
     history.pushState({ view: 'results' }, '', '#results');
   }, []);
 
+  const showCompare = useCallback((a: HistoryEntry, b: HistoryEntry) => {
+    setCompareEntries([a, b]);
+    setView('compare');
+    history.pushState({ view: 'compare' }, '', '#compare');
+  }, []);
+
   const showUpload = useCallback(() => {
     setJobId(null);
     setJobData(null);
+    setCompareEntries(null);
     pendingRef.current = null;
     setView('upload');
     history.pushState({ view: 'upload' }, '', '');
@@ -86,6 +95,7 @@ export default function Page() {
           <UploadView
             onStartProcessing={startProcessing}
             onOpenHistory={openFromHistory}
+            onCompareHistory={showCompare}
           />
         )}
         {view === 'processing' && jobId && (
@@ -97,6 +107,15 @@ export default function Page() {
         )}
         {view === 'results' && jobData && (
           <ResultsView jobData={jobData} onNewAnalysis={showUpload} />
+        )}
+        {view === 'compare' && compareEntries && (
+          <CompareView
+            entryA={compareEntries[0]}
+            entryB={compareEntries[1]}
+            onOpenA={openFromHistory}
+            onOpenB={openFromHistory}
+            onExit={showUpload}
+          />
         )}
       </main>
     </>

@@ -14,7 +14,28 @@ interface Step {
  * translate it into marketer-facing guidance.
  */
 function stepsFromZ(z: ZScores | undefined, friction: number | undefined): Step[] {
-  if (!z) return [];
+  // If we have no z-scores at all, fall back to a friction-score only nudge.
+  if (!z) {
+    if (friction != null && friction <= 4) {
+      return [{
+        label: 'Looking solid',
+        detail: 'Friction score is in the green zone. Consider testing a bolder variant to find the ceiling.',
+        tone: 'phosphor',
+      }];
+    }
+    if (friction != null && friction >= 7) {
+      return [{
+        label: 'Heavy friction detected',
+        detail: 'Score is trending high. Strip competing elements and simplify the focal hierarchy before iterating.',
+        tone: 'red',
+      }];
+    }
+    return [{
+      label: 'Iterate and retest',
+      detail: 'Try one variable change at a time (copy, color, framing) and compare runs side-by-side.',
+      tone: 'cyan',
+    }];
+  }
   const steps: Step[] = [];
 
   if (z.cognitive_load > 1.5) {

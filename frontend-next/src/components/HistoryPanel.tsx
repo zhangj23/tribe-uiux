@@ -36,12 +36,15 @@ function timeAgo(ts: number): string {
 
 interface Props {
   onOpen: (job: Job) => void;
+  onCompare?: (a: HistoryEntry, b: HistoryEntry) => void;
 }
 
-export default function HistoryPanel({ onOpen }: Props) {
+export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const { entries, remove, rename, clear } = useHistory();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [compareMode, setCompareMode] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
 
   const beginEdit = useCallback((entry: HistoryEntry) => {
     setEditingId(entry.id);
@@ -70,24 +73,86 @@ export default function HistoryPanel({ onOpen }: Props) {
     }
   }, [commitEdit, cancelEdit]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelected(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      if (prev.length >= 2) return [prev[1], id]; // drop the oldest, keep newest 2
+      return [...prev, id];
+    });
+  }, []);
+
+  const runCompare = useCallback(() => {
+    if (selected.length !== 2 || !onCompare) return;
+    const a = entries.find(e => e.id === selected[0]);
+    const b = entries.find(e => e.id === selected[1]);
+    if (a && b) {
+      onCompare(a, b);
+      setCompareMode(false);
+      setSelected([]);
+    }
+  }, [selected, entries, onCompare]);
+
+  const exitCompareMode = useCallback(() => {
+    setCompareMode(false);
+    setSelected([]);
+  }, []);
+
   if (entries.length === 0) return null;
+
+  const canCompare = entries.length >= 2 && !!onCompare;
 
   return (
     <section className="history-panel" aria-labelledby="history-title">
       <div className="history-header">
         <div className="history-header-text">
           <h3 id="history-title">Recent analyses</h3>
-          <p className="history-sub">Stored locally in your browser — private to this device.</p>
+          <p className="history-sub">
+            {compareMode
+              ? `Pick ${2 - selected.length} more to compare.`
+              : 'Stored locally in your browser — private to this device. Double-click a name to rename.'}
+          </p>
         </div>
-        <button
-          type="button"
-          className="history-clear"
-          onClick={() => {
-            if (confirm('Clear all local analysis history?')) clear();
-          }}
-        >
-          Clear all
-        </button>
+        <div className="history-header-actions">
+          {canCompare && !compareMode && (
+            <button
+              type="button"
+              className="history-compare-btn"
+              onClick={() => setCompareMode(true)}
+            >
+              Compare two
+            </button>
+          )}
+          {compareMode && (
+            <>
+              <button
+                type="button"
+                className="history-compare-btn history-compare-btn--primary"
+                onClick={runCompare}
+                disabled={selected.length !== 2}
+              >
+                Compare →
+              </button>
+              <button
+                type="button"
+                className="history-clear"
+                onClick={exitCompareMode}
+              >
+                Cancel
+              </button>
+            </>
+          )}
+          {!compareMode && (
+            <button
+              type="button"
+              className="history-clear"
+              onClick={() => {
+                if (confirm('Clear all local analysis history?')) clear();
+              }}
+            >
+              Clear all
+            </button>
+          )}
+        </div>
       </div>
 
       <ul className="history-list">
@@ -96,8 +161,43 @@ export default function HistoryPanel({ onOpen }: Props) {
           const verdict = verdictForScore(score);
           const displayName = entry.label || entry.fileName;
           const isEditing = editingId === entry.id;
+          const isSelected = selected.includes(entry.id);
+          const cardClass =
+            `history-card history-card--${verdict.tone}${compareMode ? ' history-card--selectable' : ''}${isSelected ? ' is-selected' : ''}`;
+
+          if (compareMode) {
+            return (
+              <li key={entry.id} className={cardClass}>
+                <button
+                  type="button"
+                  className="history-card-main history-card-select"
+                  onClick={() => toggleSelect(entry.id)}
+                  aria-pressed={isSelected}
+                >
+                  <span className={`history-checkbox${isSelected ? ' is-checked' : ''}`} aria-hidden>
+                    {isSelected ? '✓' : ''}
+                  </span>
+                  <div className="history-score" aria-hidden>
+                    <span className="history-score-value">{score != null ? score.toFixed(1) : '—'}</span>
+                    <span className="history-score-scale">/10</span>
+                  </div>
+                  <div className="history-meta">
+                    <div className="history-meta-row">
+                      <span className="history-glyph" aria-hidden>{typeGlyph(entry.fileType)}</span>
+                      <span className="history-filename">{displayName}</span>
+                    </div>
+                    <div className="history-meta-row history-meta-row--secondary">
+                      <span className="history-verdict">{verdict.label}</span>
+                      <span className="history-time">{timeAgo(entry.savedAt)}</span>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            );
+          }
+
           return (
-            <li key={entry.id} className={`history-card history-card--${verdict.tone}`}>
+            <li key={entry.id} className={cardClass}>
               <div className="history-card-main">
                 <button
                   type="button"
