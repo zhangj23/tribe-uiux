@@ -1,9 +1,25 @@
 'use client';
 
-import { useState, useCallback, KeyboardEvent } from 'react';
+import { useState, useCallback, useMemo, KeyboardEvent } from 'react';
 import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
+
+function matchesQuery(entry: HistoryEntry, q: string): boolean {
+  if (!q) return true;
+  const needle = q.toLowerCase();
+  const hay = [
+    entry.label,
+    entry.fileName,
+    entry.fileType,
+    new Date(entry.savedAt).toLocaleDateString(),
+    new Date(entry.savedAt).toLocaleString('en-US', { month: 'long' }),
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  return hay.includes(needle);
+}
 
 function verdictForScore(score: number | undefined): { label: string; tone: string } {
   if (score == null) return { label: '—', tone: 'dim' };
@@ -45,6 +61,12 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const [draft, setDraft] = useState('');
   const [compareMode, setCompareMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [query, setQuery] = useState('');
+
+  const filteredEntries = useMemo(
+    () => entries.filter(e => matchesQuery(e, query)),
+    [entries, query]
+  );
 
   const beginEdit = useCallback((entry: HistoryEntry) => {
     setEditingId(entry.id);
@@ -76,7 +98,11 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
   const toggleSelect = useCallback((id: string) => {
     setSelected(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
-      if (prev.length >= 2) return [prev[1], id]; // drop the oldest, keep newest 2
+      if (prev.length >= 2) {
+        // Already have 2 — replace the oldest so users can quickly swap out
+        // their first pick without having to uncheck manually.
+        return [prev[1], id];
+      }
       return [...prev, id];
     });
   }, []);
@@ -133,6 +159,30 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
           </p>
         </div>
         <div className="history-header-actions">
+          {!compareMode && (
+            <div className="history-search-wrap">
+              <input
+                type="search"
+                className="history-search"
+                placeholder="Search analyses…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setQuery(''); }}
+                aria-label="Search saved analyses by name or date"
+              />
+              {query && (
+                <button
+                  type="button"
+                  className="history-search-clear"
+                  onClick={() => setQuery('')}
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
           {canCompare && !compareMode && (
             <button
               type="button"
@@ -175,8 +225,17 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
         </div>
       </div>
 
+      {filteredEntries.length === 0 && query && (
+        <div className="history-no-results">
+          <p>No analyses match &ldquo;{query}&rdquo;.</p>
+          <button type="button" className="history-clear" onClick={() => setQuery('')}>
+            Clear search
+          </button>
+        </div>
+      )}
+
       <ul className="history-list">
-        {entries.map(entry => {
+        {filteredEntries.map(entry => {
           const score = entry.job.friction_score;
           const verdict = verdictForScore(score);
           const displayName = entry.label || entry.fileName;

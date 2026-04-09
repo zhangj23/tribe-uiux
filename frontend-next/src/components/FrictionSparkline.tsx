@@ -49,9 +49,10 @@ export default function FrictionSparkline({ entries, width = 220, height = 48 }:
     const minScore = Math.min(...scores, 0);
     const range = Math.max(0.5, maxScore - minScore);
 
+    // scored.length is guaranteed >= 2 by the guard above.
     const pts: Point[] = scored.map((e, i) => {
       const score = e.job.friction_score!;
-      const x = pad + (scored.length === 1 ? innerW / 2 : (i / (scored.length - 1)) * innerW);
+      const x = pad + (i / (scored.length - 1)) * innerW;
       // Invert Y: higher score = higher on chart would be wrong visually since higher friction = worse.
       // Lower friction (better) should visually sit lower but we want "down = good" metaphor.
       // Use conventional: lower y = higher score so the line trends down when friction improves.
