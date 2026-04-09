@@ -8,9 +8,19 @@ interface Props {
    * upload view itself) the brand renders as a static element. */
   onHome?: () => void;
   isHome?: boolean;
+  /** When set, the header shows a compact friction-score chip next to
+   * the status indicator so the KPI is glanceable while scrolling. */
+  frictionScore?: number;
 }
 
-export default function Header({ onShowShortcuts, onHome, isHome }: Props) {
+function frictionTone(score: number): 'phosphor' | 'cyan' | 'amber' | 'red' {
+  if (score <= 3) return 'phosphor';
+  if (score <= 5) return 'cyan';
+  if (score <= 7) return 'amber';
+  return 'red';
+}
+
+export default function Header({ onShowShortcuts, onHome, isHome, frictionScore }: Props) {
   const health = useHealth();
   const homeable = !!onHome && !isHome;
 
@@ -65,6 +75,17 @@ export default function Header({ onShowShortcuts, onHome, isHome }: Props) {
         <div className="header-left">{Brand}</div>
       )}
       <div className="header-right">
+        {frictionScore != null && (
+          <div
+            className={`header-friction header-friction--${frictionTone(frictionScore)}`}
+            role="status"
+            aria-label={`Current friction score ${frictionScore.toFixed(1)} of 10`}
+            title="Friction score for the open analysis"
+          >
+            <span className="header-friction-label">Friction</span>
+            <span className="header-friction-value">{frictionScore.toFixed(1)}</span>
+          </div>
+        )}
         {onShowShortcuts && (
           <button
             type="button"

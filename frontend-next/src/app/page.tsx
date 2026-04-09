@@ -139,6 +139,7 @@ export default function Page() {
         onShowShortcuts={() => setKeyboardHelpOpen(true)}
         onHome={showUpload}
         isHome={view === 'upload'}
+        frictionScore={view === 'results' ? jobData?.friction_score : undefined}
       />
       <main>
         {view === 'upload' && (
