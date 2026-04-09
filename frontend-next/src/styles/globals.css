@@ -2498,3 +2498,156 @@ body {
 
 :focus-visible { outline: 2px solid var(--phosphor); outline-offset: 2px; }
 :focus:not(:focus-visible) { outline: none; }
+
+/* ============ PRINT STYLES ============
+   Browser print → PDF should give a clean, brand-light report:
+   white background, dark text, no decorative overlays, no header
+   chrome, no buttons, no sticky chart axes. */
+@media print {
+  :root {
+    --bg-deep: #ffffff;
+    --bg: #ffffff;
+    --bg-raised: #ffffff;
+    --bg-surface: #f5f5f7;
+    --text-primary: #1a1a1f;
+    --text-secondary: #4a4f62;
+    --text-dim: #6b7280;
+    --dim: #d4d6dc;
+  }
+
+  body {
+    background: #fff !important;
+    color: #1a1a1f !important;
+  }
+
+  /* Hide chrome and decorations that don't help on paper. */
+  .scanline-overlay,
+  .grain-overlay,
+  .app-header,
+  .results-mode-toggle,
+  .export-button-wrap,
+  .btn-new,
+  .btn-cancel,
+  .btn-analyze,
+  .results-header-actions,
+  .history-panel,
+  .sparkline,
+  .kbd-overlay,
+  .processing-container,
+  .panel-badge,
+  .file-remove,
+  .header-help {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .results-header {
+    border-bottom: 1px solid #d4d6dc;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .results-title {
+    color: #1a1a1f !important;
+    text-shadow: none !important;
+  }
+
+  .results-hero {
+    grid-template-columns: 1fr 1.5fr !important;
+    gap: 24px !important;
+    padding: 0 !important;
+    margin: 0 0 24px !important;
+    page-break-inside: avoid;
+  }
+  .results-hero-score,
+  .results-hero-actions {
+    background: #fff !important;
+    border: 1px solid #d4d6dc !important;
+    box-shadow: none !important;
+    padding: 16px !important;
+  }
+  .friction-number,
+  .friction-verdict,
+  .friction-hint {
+    color: inherit !important;
+  }
+  .friction-number {
+    color: #1a1a1f !important;
+  }
+  .next-step,
+  .gauge {
+    background: #fff !important;
+    border: 1px solid #d4d6dc !important;
+  }
+  .next-step-label {
+    color: #1a1a1f !important;
+  }
+
+  /* Spike timeline keeps its dots but loses the dark glow. */
+  .spike-timeline {
+    background: #fff !important;
+    border: 1px solid #d4d6dc !important;
+    page-break-inside: avoid;
+  }
+  .spike-dot {
+    box-shadow: none !important;
+    border: 1px solid #1a1a1f;
+  }
+
+  /* Results grid: stack the panels for paper. */
+  .results-grid {
+    display: block !important;
+    background: #fff !important;
+    min-height: 0 !important;
+    max-width: none !important;
+  }
+  .panel {
+    background: #fff !important;
+    page-break-inside: avoid;
+    margin-bottom: 16px;
+    padding: 12px 0 !important;
+    border-top: 1px solid #d4d6dc !important;
+  }
+  .panel-header h3 {
+    color: #1a1a1f !important;
+  }
+
+  /* Force every collapsible analysis section open on paper, no chevrons. */
+  .analysis-chevron {
+    display: none !important;
+  }
+  .analysis-section {
+    background: #fff !important;
+    border: 1px solid #d4d6dc !important;
+    page-break-inside: avoid;
+    margin-bottom: 8px;
+  }
+  .analysis-section-body {
+    display: block !important;
+  }
+  .analysis-section-body[hidden] {
+    display: block !important;
+  }
+  .analysis-section-header {
+    color: #1a1a1f !important;
+    background: #f5f5f7 !important;
+  }
+
+  a, a:visited {
+    color: #1a1a1f !important;
+    text-decoration: underline;
+  }
+
+  /* Slider, brain controls — not meaningful on paper. */
+  .brain-controls,
+  .brain-legend {
+    display: none !important;
+  }
+
+  @page {
+    margin: 16mm 14mm;
+    size: A4;
+  }
+}
