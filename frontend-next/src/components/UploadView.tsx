@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback, DragEvent, ChangeEvent } from 'react';
 import HistoryPanel from './HistoryPanel';
+import FrictionSparkline from './FrictionSparkline';
+import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
 
@@ -42,6 +44,7 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { entries: historyEntries } = useHistory();
 
   const selectFile = useCallback((file: File) => {
     if (uploading) {
@@ -118,12 +121,24 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
         </p>
       </div>
 
+      <FrictionSparkline entries={historyEntries} />
+
+
       <div
         className={`dropzone${dragOver ? ' drag-over' : ''}`}
+        role="button"
+        tabIndex={0}
+        aria-label="Drop an image, video, or audio file here, or press Enter to browse"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={() => setDragOver(false)}
         onClick={() => !selectedFile && fileInputRef.current?.click()}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !selectedFile) {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
       >
         <div className="dropzone-inner">
           <svg className="dropzone-icon" width="40" height="40" viewBox="0 0 40 40" fill="none">
@@ -153,9 +168,14 @@ export default function UploadView({ onStartProcessing, onOpenHistory, onCompare
         accept="image/*,video/*,audio/*"
         style={{ display: 'none' }}
         onChange={handleFileChange}
+        aria-label="Upload image, video, or audio file"
       />
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="error-banner" role="alert" aria-live="assertive">
+          {error}
+        </div>
+      )}
 
       {selectedFile && (
         <div className="upload-meta">

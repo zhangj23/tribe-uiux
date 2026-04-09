@@ -205,6 +205,91 @@ body {
   line-height: 1.7;
 }
 
+/* ============ FRICTION SPARKLINE ============ */
+.sparkline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-raised);
+  border: var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+}
+
+.sparkline-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sparkline-title {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.sparkline-sub {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.sparkline-chart {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.sparkline-chart svg {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}
+
+.sparkline-current {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.sparkline-current-score {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.sparkline-delta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+}
+
+.sparkline-delta--phosphor { color: var(--phosphor); }
+.sparkline-delta--red { color: var(--red); }
+.sparkline-delta--dim { color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  .sparkline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+  .sparkline-current { flex-direction: row; align-items: baseline; gap: var(--space-sm); }
+  .sparkline-chart { width: 100%; }
+}
+
 .dropzone {
   width: 100%;
   border: 1.5px dashed var(--dim);
@@ -526,7 +611,7 @@ body {
   pointer-events: none;
   animation: export-toast-in 0.18s ease-out;
   white-space: nowrap;
-  z-index: 20;
+  z-index: 1000;
 }
 
 .export-toast--success {

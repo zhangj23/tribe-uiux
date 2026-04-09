@@ -35,7 +35,7 @@ export default function ExportButton({ job, label }: Props) {
         className="export-button"
         onClick={handleCopy}
         disabled={disabled}
-        aria-label="Copy analysis summary to clipboard"
+        aria-label={disabled ? 'Waiting for analysis to complete' : 'Copy analysis summary to clipboard'}
         title={disabled ? 'Waiting for analysis to complete' : 'Copy summary to clipboard'}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
