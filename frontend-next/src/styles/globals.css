@@ -560,6 +560,58 @@ body {
   display: flex;
   gap: var(--space-sm);
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.results-mode-toggle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  background: var(--bg-raised);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.results-mode-toggle:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+.results-mode-toggle.is-active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: var(--cyan-dim);
+}
+
+/* Compact / presentation mode — hero only, bigger score, no panels */
+.results--compact .results-hero {
+  padding: var(--space-2xl) var(--space-xl);
+  grid-template-columns: minmax(280px, 380px) 1fr;
+}
+
+.results--compact .results-hero-score .friction-number {
+  font-size: 6rem;
+  line-height: 1;
+}
+
+.results--compact .results-hero-score,
+.results--compact .results-hero-actions {
+  padding: var(--space-xl);
+}
+
+.results--compact .next-steps-list { gap: var(--space-md); }
+.results--compact .next-step-label { font-size: 1.05rem; }
+.results--compact .next-step-detail { font-size: 0.92rem; }
+
+@media (max-width: 1200px) {
+  .results--compact .results-hero {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============ EXPORT BUTTON ============ */

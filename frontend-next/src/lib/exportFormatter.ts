@@ -57,12 +57,34 @@ export function formatJobAsText(job: Job, opts: ExportOptions = {}): string {
     lines.push('');
   }
 
-  // Trim the LLM analysis to avoid huge clipboard payloads.
+  // Trim the LLM analysis to avoid huge clipboard payloads. Cut at the last
+  // sentence or paragraph boundary within the budget so the exported text
+  // never ends mid-thought.
   if (job.llm_analysis) {
-    const trimmed = job.llm_analysis.trim().slice(0, 800);
-    const truncated = job.llm_analysis.trim().length > 800;
+    const full = job.llm_analysis.trim();
+    const LIMIT = 800;
+    let out: string;
+    if (full.length <= LIMIT) {
+      out = full;
+    } else {
+      const slice = full.slice(0, LIMIT);
+      // Prefer paragraph > sentence > word boundary.
+      const byPara = slice.lastIndexOf('\n\n');
+      const bySentence = Math.max(
+        slice.lastIndexOf('. '),
+        slice.lastIndexOf('! '),
+        slice.lastIndexOf('? '),
+      );
+      const byWord = slice.lastIndexOf(' ');
+      const cut =
+        byPara > LIMIT * 0.6 ? byPara
+        : bySentence > LIMIT * 0.6 ? bySentence + 1
+        : byWord > 0 ? byWord
+        : LIMIT;
+      out = slice.slice(0, cut).trimEnd() + '…';
+    }
     lines.push('AI Analysis:');
-    lines.push(trimmed + (truncated ? '…' : ''));
+    lines.push(out);
     lines.push('');
   }
 
