@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import BrainCanvas from './BrainCanvas';
 import MetricGauges from './MetricGauges';
 import TimeseriesChart from './TimeseriesChart';
@@ -9,6 +9,7 @@ import AnalysisText from './AnalysisText';
 import NextSteps from './NextSteps';
 import SpikeTimeline from './SpikeTimeline';
 import ExportButton from './ExportButton';
+import { useHistory } from '@/hooks/useHistory';
 import type { Job } from '@/types';
 
 interface Props {
@@ -25,6 +26,50 @@ export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryN
   const maxStep = Math.max(0, (jobData.brain_activations?.length ?? 1) - 1);
   const currentTime = jobData.timestamps?.[timestep];
 
+  const { entries, setNote } = useHistory();
+
+  // The current note (string) for THIS analysis. Starts from props but the
+  // user can edit it inline; we mirror to localStorage as soon as the editor
+  // commits.
+  const [note, setLocalNote] = useState<string>(entryNote ?? '');
+  const [editingNote, setEditingNote] = useState(false);
+  const [draft, setDraft] = useState('');
+  const noteJobIdRef = useRef<string | null>(null);
+
+  // Keep local note in sync with the prop when the user navigates between
+  // analyses (different job_id), but don't clobber typed-in changes.
+  useEffect(() => {
+    if (noteJobIdRef.current !== jobData.job_id) {
+      setLocalNote(entryNote ?? '');
+      setEditingNote(false);
+      setDraft('');
+      noteJobIdRef.current = jobData.job_id;
+    }
+  }, [jobData.job_id, entryNote]);
+
+  // Find the matching history entry by job id so we know if we can persist.
+  const matchingEntry = entries.find(e => e.id === jobData.job_id);
+  const canPersistNote = !!matchingEntry;
+
+  const startEditing = useCallback(() => {
+    setDraft(note);
+    setEditingNote(true);
+  }, [note]);
+
+  const cancelEditing = useCallback(() => {
+    setEditingNote(false);
+    setDraft('');
+  }, []);
+
+  const commitNote = useCallback(() => {
+    if (matchingEntry) {
+      setNote(matchingEntry.id, draft);
+    }
+    setLocalNote(draft.trim());
+    setEditingNote(false);
+    setDraft('');
+  }, [matchingEntry, draft, setNote]);
+
   return (
     <div className={`view-enter${compact ? ' results--compact' : ''}`}>
       <div className="results-header">
@@ -40,7 +85,7 @@ export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryN
           >
             {compact ? 'Full view' : 'Compact view'}
           </button>
-          <ExportButton job={jobData} label={entryLabel} note={entryNote} />
+          <ExportButton job={jobData} label={entryLabel} note={note} />
           <button className="btn-new" onClick={onNewAnalysis}>+ New Analysis</button>
         </div>
       </div>
@@ -55,10 +100,63 @@ export default function ResultsView({ jobData, onNewAnalysis, entryLabel, entryN
         </div>
       </section>
 
-      {entryNote && (
-        <aside className="results-entry-note" aria-label="Saved note for this analysis">
+      {/* Inline note: existing preview, edit form, or "add" affordance. */}
+      {(note || editingNote || canPersistNote) && (
+        <aside
+          className={`results-entry-note${editingNote ? ' is-editing' : ''}${!note && !editingNote ? ' is-empty' : ''}`}
+          aria-label="Note for this analysis"
+        >
           <span className="results-entry-note-eyebrow">Note</span>
-          <p className="results-entry-note-body">{entryNote}</p>
+          {editingNote ? (
+            <div className="results-entry-note-edit">
+              <textarea
+                className="history-note-input"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') { e.preventDefault(); cancelEditing(); }
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    commitNote();
+                  }
+                }}
+                placeholder="Capture client feedback, version notes, or todos…"
+                autoFocus
+                rows={3}
+                maxLength={500}
+                aria-label="Note for this analysis"
+              />
+              <div className="history-note-actions">
+                <span className="history-note-hint">⌘/Ctrl + Enter to save · Esc to cancel</span>
+                <button type="button" className="history-clear" onClick={cancelEditing}>Cancel</button>
+                <button
+                  type="button"
+                  className="history-compare-btn history-compare-btn--primary"
+                  onClick={commitNote}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : note ? (
+            <button
+              type="button"
+              className="results-entry-note-body results-entry-note-body--button"
+              onClick={canPersistNote ? startEditing : undefined}
+              disabled={!canPersistNote}
+              title={canPersistNote ? 'Click to edit' : ''}
+            >
+              {note}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="results-entry-note-add"
+              onClick={startEditing}
+            >
+              + Add a note about this run
+            </button>
+          )}
         </aside>
       )}
 
