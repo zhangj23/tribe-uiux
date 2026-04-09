@@ -8,6 +8,7 @@ import ResultsView from '@/components/ResultsView';
 import CompareView from '@/components/CompareView';
 import KeyboardHelp from '@/components/KeyboardHelp';
 import { addHistoryEntry, type HistoryEntry } from '@/lib/history';
+import { applyTabIdentity, resetTabIdentity } from '@/lib/tabIdentity';
 import type { Job } from '@/types';
 
 type View = 'upload' | 'processing' | 'results' | 'compare';
@@ -106,6 +107,23 @@ export default function Page() {
     setView('upload');
     history.pushState({ view: 'upload' }, '', '');
   }, []);
+
+  // Reflect the open analysis in the tab title + favicon so marketers fanning
+  // out a bunch of tabs can tell which is which without switching context.
+  useEffect(() => {
+    if (view === 'results' && jobData?.friction_score != null) {
+      applyTabIdentity({
+        frictionScore: jobData.friction_score,
+        label: activeEntryMeta?.label,
+      });
+    } else {
+      resetTabIdentity();
+    }
+    return () => {
+      // On unmount (full page nav away), restore the default identity.
+      resetTabIdentity();
+    };
+  }, [view, jobData, activeEntryMeta]);
 
   // Global keyboard shortcuts. Skip if the user is typing in an input/textarea.
   useEffect(() => {
