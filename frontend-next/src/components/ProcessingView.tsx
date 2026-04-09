@@ -118,7 +118,7 @@ export default function ProcessingView({ jobId, onComplete, onCancel }: Props) {
   return (
     <div className="processing-container view-enter">
       <div className="processing-brain">
-        <ProcessingCanvas />
+        <ProcessingCanvas stage={stage} />
       </div>
 
       <div className="processing-info">
