@@ -1,10 +1,40 @@
 """Orchestrates the full analysis pipeline for a job."""
 
+import logging
 import os
 import sys
 import traceback
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+def _user_facing_error(exc: Exception) -> str:
+    """Translate an internal exception into a short, safe, user-facing message."""
+    kind = type(exc).__name__
+    msg = str(exc).strip()
+
+    # Known exception types get friendlier phrasing
+    friendly = {
+        "FileNotFoundError": "We couldn't find the uploaded file on disk. Please try uploading it again.",
+        "PermissionError": "The server couldn't read the uploaded file. Please try again.",
+        "ValueError": "The uploaded file couldn't be decoded. Please check the format and try again.",
+        "TimeoutError": "The analysis took too long to complete. Please try a shorter clip or smaller file.",
+        "MemoryError": "The file was too large for the server to process. Try a smaller or shorter clip.",
+    }
+    if kind in friendly:
+        return friendly[kind]
+
+    # ffmpeg / media conversion failures usually surface as CalledProcessError
+    if "CalledProcessError" in kind or "ffmpeg" in msg.lower():
+        return "We couldn't decode that media file. It may be corrupt or in an unsupported codec."
+
+    if "Anthropic" in kind or "anthropic" in msg.lower():
+        return "The AI analysis service is temporarily unavailable. Please try again in a moment."
+
+    # Fall back to a clean generic message — never leak the traceback to the client.
+    return "Something went wrong while analyzing your media. Please try again, or use a different file."
 
 # Ensure ffmpeg is findable on Windows
 if sys.platform == "win32":
@@ -93,8 +123,16 @@ def run_pipeline(job: jm.Job):
         )
 
     except Exception as e:
+        # Log the full traceback server-side for debugging…
+        logger.error(
+            "Pipeline failed for job %s: %s\n%s",
+            job.id,
+            e,
+            traceback.format_exc(),
+        )
+        # …but only return a clean, user-facing message to the client.
         jm.update_job(
             job.id,
             status=jm.FAILED,
-            error=f"{type(e).__name__}: {e}\n{traceback.format_exc()}",
+            error=_user_facing_error(e),
         )

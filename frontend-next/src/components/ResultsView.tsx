@@ -6,6 +6,7 @@ import MetricGauges from './MetricGauges';
 import TimeseriesChart from './TimeseriesChart';
 import FrictionScore from './FrictionScore';
 import AnalysisText from './AnalysisText';
+import NextSteps from './NextSteps';
 import type { Job } from '@/types';
 
 interface Props {
@@ -25,6 +26,16 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
         <button className="btn-new" onClick={onNewAnalysis}>+ New Analysis</button>
       </div>
 
+      {/* Hero: Friction Score + Next Steps */}
+      <section className="results-hero">
+        <div className="results-hero-score">
+          <FrictionScore score={jobData.friction_score} />
+        </div>
+        <div className="results-hero-actions">
+          <NextSteps zScores={jobData.z_scores} frictionScore={jobData.friction_score} />
+        </div>
+      </section>
+
       <div className="results-grid">
         {/* Left: Brain panel */}
         <div className="panel panel--brain">
@@ -40,24 +51,26 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
           </div>
           {jobData.brain_activations && jobData.timestamps && (
             <div className="brain-controls">
-              <div className="slider-label">
+              <label className="slider-label" htmlFor="timestep-slider">
                 <span>Timestep</span>
                 <span>{currentTime != null ? currentTime.toFixed(2) + 's' : '0.00s'}</span>
-              </div>
+              </label>
               <input
+                id="timestep-slider"
                 type="range"
                 className="slider"
                 min={0}
                 max={maxStep}
                 value={timestep}
                 onChange={(e) => setTimestep(parseInt(e.target.value))}
+                aria-label="Scrub through analysis timesteps"
               />
             </div>
           )}
           <div className="brain-legend">
-            <span>Low</span>
+            <span>Low activation</span>
             <div className="legend-gradient" />
-            <span>High</span>
+            <span>High activation</span>
           </div>
         </div>
 
@@ -86,7 +99,6 @@ export default function ResultsView({ jobData, onNewAnalysis }: Props) {
             <h3>AI Analysis</h3>
             <span className="panel-badge">Claude</span>
           </div>
-          <FrictionScore score={jobData.friction_score} />
           <AnalysisText text={jobData.llm_analysis} />
         </div>
       </div>

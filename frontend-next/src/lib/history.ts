@@ -9,6 +9,8 @@ export interface HistoryEntry {
   fileName: string;
   fileType: 'image' | 'video' | 'audio' | 'other';
   fileSize: number;
+  /** Optional user-provided label (e.g. "Landing hero v3 — higher contrast"). */
+  label?: string;
   /** Slim snapshot of the job. `brain_activations` is intentionally dropped to stay within localStorage quota. */
   job: Omit<Job, 'brain_activations'>;
 }
@@ -85,6 +87,19 @@ export function addHistoryEntry(input: {
 export function removeHistoryEntry(id: string) {
   const next = loadHistory().filter(e => e.id !== id);
   saveAll(next);
+}
+
+export function renameHistoryEntry(id: string, label: string): HistoryEntry | null {
+  const entries = loadHistory();
+  let updated: HistoryEntry | null = null;
+  const next = entries.map(e => {
+    if (e.id !== id) return e;
+    const trimmed = label.trim();
+    updated = { ...e, label: trimmed || undefined };
+    return updated;
+  });
+  saveAll(next);
+  return updated;
 }
 
 export function clearHistory() {

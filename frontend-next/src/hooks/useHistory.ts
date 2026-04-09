@@ -5,6 +5,7 @@ import {
   loadHistory,
   addHistoryEntry,
   removeHistoryEntry,
+  renameHistoryEntry,
   clearHistory,
   type HistoryEntry,
 } from '@/lib/history';
@@ -34,10 +35,15 @@ export function useHistory() {
     setEntries(loadHistory());
   }, []);
 
+  const rename = useCallback((id: string, label: string) => {
+    renameHistoryEntry(id, label);
+    setEntries(loadHistory());
+  }, []);
+
   const clear = useCallback(() => {
     clearHistory();
     setEntries([]);
   }, []);
 
-  return { entries, ready, record, remove, clear };
+  return { entries, ready, record, remove, rename, clear };
 }

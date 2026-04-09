@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 interface BrainPoint { x: number; y: number; hemisphere: string; }
 
@@ -63,14 +63,28 @@ interface Props {
 }
 
 export default function BrainCanvas({ activations, timestep }: Props) {
+  const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const positionsRef = useRef<BrainPoint[] | null>(null);
+  const [size, setSize] = useState<{ w: number; h: number }>({ w: 280, h: 260 });
 
+  // Observe parent width and keep the canvas at a consistent aspect ratio.
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || positionsRef.current) return;
-    positionsRef.current = generateBrainLayout(canvas.width, canvas.height);
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const w = Math.max(220, Math.min(el.clientWidth, 520));
+      const h = Math.round(w * (260 / 280));
+      setSize(prev => (prev.w === w && prev.h === h ? prev : { w, h }));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
+
+  // Regenerate layout whenever the canvas dimensions change.
+  useEffect(() => {
+    positionsRef.current = generateBrainLayout(size.w, size.h);
+  }, [size.w, size.h]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -78,8 +92,15 @@ export default function BrainCanvas({ activations, timestep }: Props) {
     const positions = positionsRef.current;
     if (!canvas || !ctx || !positions) return;
 
-    const w = canvas.width;
-    const h = canvas.height;
+    // Scale the bitmap for crisp rendering on HiDPI displays.
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = size.w;
+    const h = size.h;
+    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
     ctx.fillStyle = '#08090c';
     ctx.fillRect(0, 0, w, h);
@@ -147,7 +168,15 @@ export default function BrainCanvas({ activations, timestep }: Props) {
     ctx.fillText('LEFT', w * 0.25, h - 12);
     ctx.fillText('RIGHT', w * 0.75, h - 12);
     ctx.fillText('ANTERIOR', w / 2, 18);
-  }, [activations, timestep]);
+  }, [activations, timestep, size.w, size.h]);
 
-  return <canvas ref={canvasRef} id="brainCanvas" width={280} height={260} />;
+  return (
+    <div ref={wrapRef} className="brain-canvas-wrapper">
+      <canvas
+        ref={canvasRef}
+        id="brainCanvas"
+        style={{ width: size.w, height: size.h, display: 'block', margin: '0 auto' }}
+      />
+    </div>
+  );
 }

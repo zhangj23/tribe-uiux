@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback, KeyboardEvent } from 'react';
 import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
 import type { Job } from '@/types';
@@ -38,7 +39,36 @@ interface Props {
 }
 
 export default function HistoryPanel({ onOpen }: Props) {
-  const { entries, remove, clear } = useHistory();
+  const { entries, remove, rename, clear } = useHistory();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+
+  const beginEdit = useCallback((entry: HistoryEntry) => {
+    setEditingId(entry.id);
+    setDraft(entry.label ?? entry.fileName);
+  }, []);
+
+  const commitEdit = useCallback(() => {
+    if (editingId == null) return;
+    rename(editingId, draft);
+    setEditingId(null);
+    setDraft('');
+  }, [editingId, draft, rename]);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setDraft('');
+  }, []);
+
+  const onKey = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  }, [commitEdit, cancelEdit]);
 
   if (entries.length === 0) return null;
 
@@ -64,38 +94,75 @@ export default function HistoryPanel({ onOpen }: Props) {
         {entries.map(entry => {
           const score = entry.job.friction_score;
           const verdict = verdictForScore(score);
+          const displayName = entry.label || entry.fileName;
+          const isEditing = editingId === entry.id;
           return (
             <li key={entry.id} className={`history-card history-card--${verdict.tone}`}>
-              <button
-                type="button"
-                className="history-card-main"
-                onClick={() => onOpen(entry.job as Job)}
-                aria-label={`Open analysis for ${entry.fileName}`}
-              >
-                <div className="history-score" aria-hidden>
-                  <span className="history-score-value">{score != null ? score.toFixed(1) : '—'}</span>
-                  <span className="history-score-scale">/10</span>
-                </div>
+              <div className="history-card-main">
+                <button
+                  type="button"
+                  className="history-card-open"
+                  onClick={() => onOpen(entry.job as Job)}
+                  aria-label={`Open analysis for ${displayName}`}
+                >
+                  <div className="history-score" aria-hidden>
+                    <span className="history-score-value">{score != null ? score.toFixed(1) : '—'}</span>
+                    <span className="history-score-scale">/10</span>
+                  </div>
+                </button>
                 <div className="history-meta">
                   <div className="history-meta-row">
                     <span className="history-glyph" aria-hidden>{typeGlyph(entry.fileType)}</span>
-                    <span className="history-filename" title={entry.fileName}>{entry.fileName}</span>
+                    {isEditing ? (
+                      <input
+                        className="history-label-input"
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        onKeyDown={onKey}
+                        onBlur={commitEdit}
+                        autoFocus
+                        aria-label="Rename analysis"
+                        maxLength={80}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="history-filename"
+                        title={displayName}
+                        onClick={() => onOpen(entry.job as Job)}
+                        onDoubleClick={() => beginEdit(entry)}
+                      >
+                        {displayName}
+                      </button>
+                    )}
                   </div>
                   <div className="history-meta-row history-meta-row--secondary">
                     <span className="history-verdict">{verdict.label}</span>
                     <span className="history-time">{timeAgo(entry.savedAt)}</span>
                   </div>
                 </div>
-              </button>
-              <button
-                type="button"
-                className="history-remove"
-                onClick={(e) => { e.stopPropagation(); remove(entry.id); }}
-                aria-label={`Remove ${entry.fileName} from history`}
-                title="Remove"
-              >
-                ×
-              </button>
+              </div>
+
+              <div className="history-actions">
+                <button
+                  type="button"
+                  className="history-action"
+                  onClick={() => beginEdit(entry)}
+                  aria-label={`Rename ${displayName}`}
+                  title="Rename"
+                >
+                  ✎
+                </button>
+                <button
+                  type="button"
+                  className="history-action history-action--danger"
+                  onClick={() => remove(entry.id)}
+                  aria-label={`Remove ${displayName} from history`}
+                  title="Remove"
+                >
+                  ×
+                </button>
+              </div>
             </li>
           );
         })}
