@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState, useMemo } from 'react';
 import ProcessingCanvas from './ProcessingCanvas';
 import { usePolling } from '@/hooks/usePolling';
+import { useHistory } from '@/hooks/useHistory';
 import type { Job } from '@/types';
 
 const STAGES = [
@@ -34,6 +36,14 @@ function getTitle(status: string): string {
   }
 }
 
+function fmtSeconds(ms: number): string {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return rem ? `${m}m ${rem}s` : `${m}m`;
+}
+
 interface Props {
   jobId: string;
   onComplete: (data: Job) => void;
@@ -43,6 +53,26 @@ interface Props {
 export default function ProcessingView({ jobId, onComplete, onCancel }: Props) {
   const { progress, stage, error } = usePolling(jobId, onComplete);
   const pct = Math.round(progress * 100);
+  const { entries } = useHistory();
+  const [elapsed, setElapsed] = useState(0);
+
+  // Average duration of the last 5 successful runs (anything with a duration).
+  const typicalMs = useMemo(() => {
+    const durations = entries
+      .map(e => e.durationMs)
+      .filter((d): d is number => typeof d === 'number' && d > 0)
+      .slice(0, 5);
+    if (durations.length === 0) return null;
+    return durations.reduce((a, b) => a + b, 0) / durations.length;
+  }, [entries]);
+
+  // Local stopwatch — restarts whenever the polled jobId changes.
+  useEffect(() => {
+    setElapsed(0);
+    const start = Date.now();
+    const id = setInterval(() => setElapsed(Date.now() - start), 500);
+    return () => clearInterval(id);
+  }, [jobId]);
 
   if (error) {
     return (
@@ -72,6 +102,19 @@ export default function ProcessingView({ jobId, onComplete, onCancel }: Props) {
     );
   }
 
+  // Decide what time text to show under the progress bar.
+  let etaLine: string | null = null;
+  if (typicalMs) {
+    const remaining = Math.max(0, typicalMs - elapsed);
+    if (elapsed < typicalMs) {
+      etaLine = `~${fmtSeconds(remaining)} remaining · typical run is ${fmtSeconds(typicalMs)}`;
+    } else {
+      etaLine = `Running long — typical is ${fmtSeconds(typicalMs)}, currently ${fmtSeconds(elapsed)}`;
+    }
+  } else {
+    etaLine = `${fmtSeconds(elapsed)} elapsed`;
+  }
+
   return (
     <div className="processing-container view-enter">
       <div className="processing-brain">
@@ -89,6 +132,7 @@ export default function ProcessingView({ jobId, onComplete, onCancel }: Props) {
           <span>{pct}%</span>
           <span>{stage.toUpperCase() || 'CREATED'}</span>
         </div>
+        <p className="processing-eta" aria-live="polite">{etaLine}</p>
 
         <div className="processing-stages">
           {STAGES.map((s, i) => {

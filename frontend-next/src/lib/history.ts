@@ -15,6 +15,8 @@ export interface HistoryEntry {
   note?: string;
   /** Pinned entries float to the top and are never evicted by the LRU cap. */
   pinned?: boolean;
+  /** How long the upload → completed pipeline took, in milliseconds. */
+  durationMs?: number;
   /** Slim snapshot of the job. `brain_activations` is intentionally dropped to stay within localStorage quota. */
   job: Omit<Job, 'brain_activations'>;
 }
@@ -67,8 +69,9 @@ export function addHistoryEntry(input: {
   fileName: string;
   fileType?: HistoryEntry['fileType'];
   fileSize?: number;
+  durationMs?: number;
 }): HistoryEntry {
-  const { job, fileName, fileType, fileSize } = input;
+  const { job, fileName, fileType, fileSize, durationMs } = input;
   // Strip the big payload from what we persist.
   const slim: Omit<Job, 'brain_activations'> = { ...job };
   delete (slim as Partial<Job>).brain_activations;
@@ -79,6 +82,7 @@ export function addHistoryEntry(input: {
     fileName,
     fileType: fileType ?? inferFileType(fileName),
     fileSize: fileSize ?? 0,
+    durationMs: durationMs && durationMs > 0 ? durationMs : undefined,
     job: slim,
   };
 

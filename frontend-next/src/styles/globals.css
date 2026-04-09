@@ -519,6 +519,16 @@ button.header-left.header-left--link:focus-visible {
   text-transform: uppercase;
 }
 
+.processing-eta {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .processing-stages {
   margin-top: var(--space-xl);
   display: flex;

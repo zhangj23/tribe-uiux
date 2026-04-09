@@ -15,6 +15,7 @@ type View = 'upload' | 'processing' | 'results' | 'compare';
 interface PendingUpload {
   fileName: string;
   fileSize: number;
+  startedAt: number;
 }
 
 export default function Page() {
@@ -39,8 +40,10 @@ export default function Page() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const startProcessing = useCallback((id: string, pending?: PendingUpload) => {
-    pendingRef.current = pending ?? null;
+  const startProcessing = useCallback((id: string, pending?: { fileName: string; fileSize: number }) => {
+    pendingRef.current = pending
+      ? { ...pending, startedAt: Date.now() }
+      : null;
     setJobId(id);
     setJobData(null);
     setView('processing');
@@ -59,6 +62,7 @@ export default function Page() {
         job: data,
         fileName: pending?.fileName || 'Untitled analysis',
         fileSize: pending?.fileSize ?? 0,
+        durationMs: pending?.startedAt ? Date.now() - pending.startedAt : undefined,
       });
     } catch {
       // non-fatal
