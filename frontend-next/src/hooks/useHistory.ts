@@ -9,8 +9,11 @@ import {
   renameHistoryEntry,
   togglePinHistoryEntry,
   setHistoryNote,
+  exportHistoryAsBackup,
+  importHistoryFromBackup,
   clearHistory,
   type HistoryEntry,
+  type ImportResult,
 } from '@/lib/history';
 import type { Job } from '@/types';
 
@@ -58,10 +61,32 @@ export function useHistory() {
     setEntries(loadHistory());
   }, []);
 
+  const exportBackup = useCallback((): string => {
+    return exportHistoryAsBackup();
+  }, []);
+
+  const importBackup = useCallback((json: string): ImportResult => {
+    const result = importHistoryFromBackup(json);
+    if (result.ok) setEntries(loadHistory());
+    return result;
+  }, []);
+
   const clear = useCallback(() => {
     clearHistory();
     setEntries([]);
   }, []);
 
-  return { entries, ready, record, remove, removeMany, rename, togglePin, setNote, clear };
+  return {
+    entries,
+    ready,
+    record,
+    remove,
+    removeMany,
+    rename,
+    togglePin,
+    setNote,
+    exportBackup,
+    importBackup,
+    clear,
+  };
 }

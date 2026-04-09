@@ -164,3 +164,84 @@ export function clearHistory() {
   if (!isBrowser()) return;
   window.localStorage.removeItem(STORAGE_KEY);
 }
+
+interface HistoryBackup {
+  version: 1;
+  exportedAt: number;
+  entries: HistoryEntry[];
+}
+
+export function exportHistoryAsBackup(): string {
+  const backup: HistoryBackup = {
+    version: 1,
+    exportedAt: Date.now(),
+    entries: loadHistory(),
+  };
+  return JSON.stringify(backup, null, 2);
+}
+
+export interface ImportResult {
+  ok: boolean;
+  imported: number;
+  reason?: string;
+}
+
+/**
+ * Merge an exported backup into the current history. New entries (by id)
+ * are added; existing entries are left alone so a restore never silently
+ * overwrites a fresher version. Returns how many entries were merged.
+ */
+export function importHistoryFromBackup(json: string): ImportResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return { ok: false, imported: 0, reason: 'File is not valid JSON.' };
+  }
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    (parsed as HistoryBackup).version !== 1 ||
+    !Array.isArray((parsed as HistoryBackup).entries)
+  ) {
+    return { ok: false, imported: 0, reason: 'Backup file format not recognised.' };
+  }
+
+  const incoming = (parsed as HistoryBackup).entries.filter(
+    e => e && typeof e.id === 'string' && e.job
+  );
+  const existing = loadHistory();
+  const seen = new Set(existing.map(e => e.id));
+  const merged = [...existing];
+  let added = 0;
+  for (const e of incoming) {
+    if (seen.has(e.id)) continue;
+    merged.push(e);
+    seen.add(e.id);
+    added++;
+  }
+  // Resort by savedAt desc but keep pinned first; trim if we overflow.
+  merged.sort((a, b) => {
+    const aPinned = a.pinned ? 1 : 0;
+    const bPinned = b.pinned ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    return b.savedAt - a.savedAt;
+  });
+  let trimmed = merged;
+  while (trimmed.length > MAX_ENTRIES) {
+    const oldestUnpinnedIdx = (() => {
+      let idx = -1;
+      let oldest = Infinity;
+      for (let i = 0; i < trimmed.length; i++) {
+        const entry = trimmed[i];
+        if (entry.pinned) continue;
+        if (entry.savedAt < oldest) { oldest = entry.savedAt; idx = i; }
+      }
+      return idx;
+    })();
+    if (oldestUnpinnedIdx < 0) break;
+    trimmed = trimmed.filter((_, i) => i !== oldestUnpinnedIdx);
+  }
+  saveAll(trimmed);
+  return { ok: true, imported: added };
+}

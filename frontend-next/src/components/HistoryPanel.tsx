@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, KeyboardEvent } from 'react';
+import { useState, useCallback, useMemo, useRef, KeyboardEvent } from 'react';
 import { useHistory } from '@/hooks/useHistory';
 import type { HistoryEntry } from '@/lib/history';
 
@@ -98,8 +98,41 @@ function matchesTier(entry: HistoryEntry, tier: TierFilter): boolean {
 }
 
 export default function HistoryPanel({ onOpen, onCompare }: Props) {
-  const { entries, remove, removeMany, rename, togglePin, setNote, clear } = useHistory();
+  const { entries, remove, removeMany, rename, togglePin, setNote, exportBackup, importBackup, clear } = useHistory();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = useCallback(() => {
+    const json = exportBackup();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `tribe-history-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [exportBackup]);
+
+  const handleImportFile = useCallback(async (file: File) => {
+    try {
+      const text = await file.text();
+      const result = importBackup(text);
+      if (!result.ok) {
+        alert(`Import failed: ${result.reason}`);
+        return;
+      }
+      if (result.imported === 0) {
+        alert('No new analyses to import — every entry was already in your history.');
+      } else {
+        alert(`Imported ${result.imported} ${result.imported === 1 ? 'analysis' : 'analyses'}.`);
+      }
+    } catch {
+      alert('Could not read the selected file.');
+    }
+  }, [importBackup]);
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<Mode>('browse');
   const [selected, setSelected] = useState<string[]>([]);
@@ -225,6 +258,24 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
             Once you analyze a creative, it will appear here. Run a few and you can
             compare friction scores side-by-side to see which version wins.
           </p>
+          <button
+            type="button"
+            className="history-clear"
+            onClick={() => importInputRef.current?.click()}
+          >
+            Import a backup
+          </button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleImportFile(f);
+              e.target.value = '';
+            }}
+          />
         </div>
       </section>
     );
@@ -327,15 +378,44 @@ export default function HistoryPanel({ onOpen, onCompare }: Props) {
             </>
           )}
           {mode === 'browse' && (
-            <button
-              type="button"
-              className="history-clear"
-              onClick={() => {
-                if (confirm('Clear all local analysis history?')) clear();
-              }}
-            >
-              Clear all
-            </button>
+            <>
+              <button
+                type="button"
+                className="history-clear"
+                onClick={handleExport}
+                title="Download a JSON backup of your local history"
+              >
+                Export
+              </button>
+              <button
+                type="button"
+                className="history-clear"
+                onClick={() => importInputRef.current?.click()}
+                title="Restore from a JSON backup"
+              >
+                Import
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleImportFile(f);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type="button"
+                className="history-clear"
+                onClick={() => {
+                  if (confirm('Clear all local analysis history?')) clear();
+                }}
+              >
+                Clear all
+              </button>
+            </>
           )}
         </div>
       </div>
