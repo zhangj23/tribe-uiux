@@ -13,7 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY backend/ .
-COPY frontend/ /app/frontend/
 COPY data/ /app/data/
 
 # Create upload directory

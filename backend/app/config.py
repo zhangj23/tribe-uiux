@@ -7,9 +7,6 @@ class Settings(BaseSettings):
     base_dir: Path = Path(__file__).resolve().parent.parent
     upload_dir: Path = base_dir / "data" / "uploads"
     baselines_dir: Path = base_dir / "data" / "baselines"
-    # Point at the project-root vanilla frontend (not the new Next.js one,
-    # which runs on its own dev server on port 3000 via the Next rewrites).
-    frontend_dir: Path = base_dir.parent / "frontend"
 
     # TRIBE v2
     tribe_mock_mode: bool = True  # Set False when real TRIBE is installed
