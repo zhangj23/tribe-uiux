@@ -5,9 +5,10 @@ import shutil
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
 from pydantic import BaseModel
 
+from app.auth import CurrentUser, get_optional_user
 from app.config import settings
 from app.services.job_manager import create_job, get_job, submit_pipeline
 from app.services.pipeline import run_pipeline
@@ -24,8 +25,12 @@ class CompareResponse(BaseModel):
 async def compare_designs(
     file_a: UploadFile = File(...),
     file_b: UploadFile = File(...),
+    user: CurrentUser | None = Depends(get_optional_user),
 ):
     """Upload two files and run both through the analysis pipeline."""
+    if settings.auth_required and user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     jobs = []
     for label, file in [("a", file_a), ("b", file_b)]:
         ext = Path(file.filename).suffix.lower()
@@ -55,7 +60,11 @@ async def compare_designs(
         with open(save_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        job = create_job(media_type=media_type, input_path=save_path)
+        job = create_job(
+            media_type=media_type,
+            input_path=save_path,
+            owner_id=user.id if user else None,
+        )
         submit_pipeline(job, run_pipeline)
         jobs.append(job)
 

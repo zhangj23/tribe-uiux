@@ -6,9 +6,10 @@ import shutil
 from pathlib import Path
 from urllib.parse import urlparse
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.auth import CurrentUser, get_optional_user
 from app.config import settings
 from app.models.schemas import UploadResponse
 from app.services.job_manager import create_job, submit_pipeline
@@ -68,7 +69,13 @@ async def _screenshot_url(url: str, output_path: Path) -> Path:
 
 
 @router.post("/analyze/url", response_model=UploadResponse)
-async def analyze_url(request: URLRequest):
+async def analyze_url(
+    request: URLRequest,
+    user: CurrentUser | None = Depends(get_optional_user),
+):
+    if settings.auth_required and user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     url = request.url.strip()
 
     # Validate URL
@@ -96,7 +103,11 @@ async def analyze_url(request: URLRequest):
         raise HTTPException(status_code=500, detail="Screenshot capture failed")
 
     # Create job and start pipeline (same as file upload)
-    job = create_job(media_type="image", input_path=save_path)
+    job = create_job(
+        media_type="image",
+        input_path=save_path,
+        owner_id=user.id if user else None,
+    )
     submit_pipeline(job, run_pipeline)
 
     return UploadResponse(job_id=job.id)

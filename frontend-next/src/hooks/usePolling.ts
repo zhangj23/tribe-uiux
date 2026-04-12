@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { apiFetch } from '@/lib/api';
 import type { Job } from '@/types';
 
 export type PollingErrorKind = 'network' | 'failed' | 'timeout';
@@ -56,7 +57,7 @@ export function usePolling(
       }
 
       try {
-        const resp = await fetch(`/api/jobs/${jobId}`);
+        const resp = await apiFetch(`/api/jobs/${jobId}`);
         if (!resp.ok) throw new Error('Request failed');
         const data: Job = await resp.json();
         consecutiveErrors.current = 0;

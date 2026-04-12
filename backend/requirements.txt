@@ -16,5 +16,10 @@ anthropic>=0.40.0
 # Settings
 pydantic-settings>=2.0.0
 
+# Auth (Supabase JWT verification + service-role DB writes)
+python-jose[cryptography]>=3.3.0
+httpx>=0.27.0
+supabase>=2.4.0
+
 # TRIBE v2 (install separately for real inference)
 # pip install git+https://github.com/facebookresearch/tribev2.git

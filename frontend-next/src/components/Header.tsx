@@ -1,6 +1,9 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { useHealth } from '@/hooks/useHealth';
+import { frictionTone } from '@/lib/frictionTone';
 
 interface Props {
   onShowShortcuts?: () => void;
@@ -11,18 +14,35 @@ interface Props {
   /** When set, the header shows a compact friction-score chip next to
    * the status indicator so the KPI is glanceable while scrolling. */
   frictionScore?: number;
+  /** Invoked when the signed-out user clicks the "Sign in" button. */
+  onShowLogin?: () => void;
 }
 
-function frictionTone(score: number): 'phosphor' | 'cyan' | 'amber' | 'red' {
-  if (score <= 3) return 'phosphor';
-  if (score <= 5) return 'cyan';
-  if (score <= 7) return 'amber';
-  return 'red';
-}
-
-export default function Header({ onShowShortcuts, onHome, isHome, frictionScore }: Props) {
+export default function Header({
+  onShowShortcuts,
+  onHome,
+  isHome,
+  frictionScore,
+  onShowLogin,
+}: Props) {
   const health = useHealth();
+  const { user, disabled: authDisabled, signOut } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const homeable = !!onHome && !isHome;
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    window.addEventListener('mousedown', onClick);
+    return () => window.removeEventListener('mousedown', onClick);
+  }, [menuOpen]);
+
+  const userInitial = (user?.email?.[0] ?? 'U').toUpperCase();
+  const userLabel = user?.email ?? 'Signed in';
 
   let dotStyle: React.CSSProperties;
   let statusText: string;
@@ -101,6 +121,50 @@ export default function Header({ onShowShortcuts, onHome, isHome, frictionScore 
           <span className="status-dot" style={dotStyle} />
           <span className="status-text">{statusText}</span>
         </div>
+        {!authDisabled && (
+          <div className="header-auth" ref={menuRef}>
+            {user ? (
+              <>
+                <button
+                  type="button"
+                  className="header-user-button"
+                  onClick={() => setMenuOpen(o => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  title={userLabel}
+                >
+                  <span className="header-user-avatar">{userInitial}</span>
+                </button>
+                {menuOpen && (
+                  <div className="header-user-menu" role="menu">
+                    <div className="header-user-menu-email">{userLabel}</div>
+                    <button
+                      type="button"
+                      className="header-user-menu-item"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        void signOut();
+                      }}
+                      role="menuitem"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              onShowLogin && (
+                <button
+                  type="button"
+                  className="header-signin-button"
+                  onClick={onShowLogin}
+                >
+                  Sign in
+                </button>
+              )
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

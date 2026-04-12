@@ -19,6 +19,10 @@ export interface HistoryEntry {
   durationMs?: number;
   /** Slim snapshot of the job. `brain_activations` is intentionally dropped to stay within localStorage quota. */
   job: Omit<Job, 'brain_activations'>;
+  /** Server-side uuid for this run when the user is signed in. Used to key PATCH/DELETE. */
+  serverRunId?: string;
+  /** Project this run is filed under on the server (null = "Unfiled"). */
+  projectId?: string | null;
 }
 
 function isBrowser() {
@@ -158,6 +162,75 @@ export function setHistoryNote(id: string, note: string): HistoryEntry | null {
   });
   saveAll(next);
   return updated;
+}
+
+/** Patch the server-side linkage on a local entry (used after a mirror POST). */
+export function setHistoryServerLink(
+  id: string,
+  patch: { serverRunId?: string; projectId?: string | null },
+): HistoryEntry | null {
+  const entries = loadHistory();
+  let updated: HistoryEntry | null = null;
+  const next = entries.map(e => {
+    if (e.id !== id) return e;
+    updated = {
+      ...e,
+      serverRunId: patch.serverRunId ?? e.serverRunId,
+      projectId: patch.projectId !== undefined ? patch.projectId : e.projectId,
+    };
+    return updated;
+  });
+  saveAll(next);
+  return updated;
+}
+
+/** Merge server-fetched runs into local history. Keyed by job_id. Server
+ *  values win on conflict, which keeps the local cache eventually consistent
+ *  with the authoritative copy. */
+export function mergeServerEntries(
+  serverEntries: HistoryEntry[],
+): HistoryEntry[] {
+  const local = loadHistory();
+  const byJobId = new Map(local.map(e => [e.job.job_id || e.id, e]));
+  for (const s of serverEntries) {
+    const key = s.job.job_id || s.id;
+    const existing = byJobId.get(key);
+    if (existing) {
+      byJobId.set(key, {
+        ...existing,
+        // Preserve pinned state from whichever side is more recent.
+        ...s,
+        pinned: s.pinned ?? existing.pinned,
+      });
+    } else {
+      byJobId.set(key, s);
+    }
+  }
+  const merged = Array.from(byJobId.values());
+  merged.sort((a, b) => {
+    const aPinned = a.pinned ? 1 : 0;
+    const bPinned = b.pinned ? 1 : 0;
+    if (aPinned !== bPinned) return bPinned - aPinned;
+    return b.savedAt - a.savedAt;
+  });
+  // Trim unpinned if needed.
+  let trimmed = merged;
+  while (trimmed.length > MAX_ENTRIES) {
+    const idx = (() => {
+      let found = -1;
+      let oldest = Infinity;
+      for (let i = 0; i < trimmed.length; i++) {
+        const e = trimmed[i];
+        if (e.pinned) continue;
+        if (e.savedAt < oldest) { oldest = e.savedAt; found = i; }
+      }
+      return found;
+    })();
+    if (idx < 0) break;
+    trimmed = trimmed.filter((_, i) => i !== idx);
+  }
+  saveAll(trimmed);
+  return trimmed;
 }
 
 export function clearHistory() {

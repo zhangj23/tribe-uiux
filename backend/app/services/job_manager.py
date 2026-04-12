@@ -36,6 +36,8 @@ class Job:
     friction_score: float | None = None
     error: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    # Auth — who kicked off this job (None for anonymous callers).
+    owner_id: str | None = None
 
 
 # In-memory job store
@@ -63,10 +65,19 @@ def _cleanup_old_jobs():
             del _jobs[jid]
 
 
-def create_job(media_type: str, input_path: Path) -> Job:
+def create_job(
+    media_type: str,
+    input_path: Path,
+    owner_id: str | None = None,
+) -> Job:
     _cleanup_old_jobs()
     job_id = uuid.uuid4().hex[:12]
-    job = Job(id=job_id, media_type=media_type, input_path=input_path)
+    job = Job(
+        id=job_id,
+        media_type=media_type,
+        input_path=input_path,
+        owner_id=owner_id,
+    )
     _jobs[job_id] = job
     return job
 

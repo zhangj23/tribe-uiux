@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiFetch } from '@/lib/api';
 import type { HealthResponse } from '@/types';
 
 export type HealthStatus =
@@ -16,7 +17,9 @@ export function useHealth(): HealthStatus {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
 
-    fetch('/api/health', { signal: controller.signal })
+    // Health check is safe to call anonymously — don't force an Auth header
+    // for users who aren't signed in yet.
+    apiFetch('/api/health', { signal: controller.signal, anonymous: true })
       .then(r => {
         if (!r.ok) throw new Error('health check failed');
         return r.json();

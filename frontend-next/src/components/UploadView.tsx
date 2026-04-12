@@ -4,8 +4,10 @@ import { useState, useRef, useCallback, useEffect, DragEvent, ChangeEvent } from
 import HistoryPanel from './HistoryPanel';
 import FrictionSparkline from './FrictionSparkline';
 import { useHistory } from '@/hooks/useHistory';
+import { apiFetch } from '@/lib/api';
 import { makeDemoJob } from '@/lib/demoJob';
 import type { HistoryEntry } from '@/lib/history';
+import type { Project } from '@/lib/projects';
 import type { Job } from '@/types';
 
 const ALLOWED_EXTENSIONS = new Set([
@@ -42,6 +44,9 @@ interface Props {
   /** When set, the history panel auto-enters compare mode with this id pre-selected. */
   compareSeedId?: string | null;
   onCompareSeedConsumed?: () => void;
+  /** Project this upload will be filed under (shown as a chip, and recorded at mirror time). */
+  currentProject?: Project | null;
+  onClearCurrentProject?: () => void;
 }
 
 export default function UploadView({
@@ -51,6 +56,8 @@ export default function UploadView({
   onOpenDemo,
   compareSeedId,
   onCompareSeedConsumed,
+  currentProject,
+  onClearCurrentProject,
 }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -135,7 +142,7 @@ export default function UploadView({
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+      const resp = await apiFetch('/api/upload', { method: 'POST', body: formData });
       const data = await resp.json();
       if (!resp.ok) {
         setError(data.detail || 'Upload failed. Please try again.');
@@ -170,6 +177,23 @@ export default function UploadView({
 
       <FrictionSparkline entries={historyEntries} />
 
+      {currentProject && (
+        <div className="upload-project-chip" role="status" aria-live="polite">
+          <span className="upload-project-chip-label">Uploading to</span>
+          <span className="upload-project-chip-name">{currentProject.name}</span>
+          {onClearCurrentProject && (
+            <button
+              type="button"
+              className="upload-project-chip-clear"
+              onClick={onClearCurrentProject}
+              aria-label={`Detach from ${currentProject.name}`}
+              title="Upload without a project"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
 
       <div
         className={`dropzone${dragOver ? ' drag-over' : ''}`}

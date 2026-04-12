@@ -8,6 +8,13 @@ services:
         required: false
     environment:
       - TRIBE_MOCK_MODE=true
+      # The backend reads these names; map the NEXT_PUBLIC_* vars from .env
+      # onto them so there's only one place to set Supabase credentials.
+      - SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-}
+      - AUTH_REQUIRED=${AUTH_REQUIRED:-false}
     volumes:
       - uploads:/app/data/uploads
       - ./backend/app:/app/app
@@ -17,8 +24,16 @@ services:
     build: ./frontend-next
     ports:
       - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
     environment:
       - BACKEND_URL=http://app:9100
+      # Next.js only exposes env vars prefixed with NEXT_PUBLIC_ to the client.
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:-}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      # Drive the frontend gate from the same single AUTH_REQUIRED flag.
+      - NEXT_PUBLIC_AUTH_REQUIRED=${AUTH_REQUIRED:-false}
     volumes:
       - ./frontend-next/src:/app/src
     depends_on:

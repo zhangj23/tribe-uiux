@@ -9,7 +9,10 @@ import AnalysisText from './AnalysisText';
 import NextSteps from './NextSteps';
 import SpikeTimeline from './SpikeTimeline';
 import ExportButton from './ExportButton';
+import ProjectRankCard from './ProjectRankCard';
 import { useHistory } from '@/hooks/useHistory';
+import { listRuns, type Project, type Run } from '@/lib/projects';
+import { useAuth } from '@/hooks/useAuth';
 import type { Job } from '@/types';
 
 interface Props {
@@ -20,6 +23,10 @@ interface Props {
   entryNote?: string;
   /** Send the user to upload view with this job pre-armed as Compare side A. */
   onCompareWith?: (jobId: string) => void;
+  /** Project this run was filed under (shown as a rank card when set). */
+  currentProject?: Project | null;
+  /** Navigate to another run's results view (used by the rank card). */
+  onOpenRun?: (run: Run) => void;
 }
 
 export default function ResultsView({
@@ -28,7 +35,11 @@ export default function ResultsView({
   entryLabel,
   entryNote,
   onCompareWith,
+  currentProject,
+  onOpenRun,
 }: Props) {
+  const { user } = useAuth();
+  const [projectRuns, setProjectRuns] = useState<Run[]>([]);
   const [timestep, setTimestep] = useState(0);
   const [compact, setCompact] = useState(false);
   const maxStep = Math.max(0, (jobData.brain_activations?.length ?? 1) - 1);
@@ -54,6 +65,33 @@ export default function ResultsView({
       noteJobIdRef.current = jobData.job_id;
     }
   }, [jobData.job_id, entryNote]);
+
+  // When a project is selected, fetch its runs so we can render the rank card.
+  // Re-fetched whenever the current job id changes, because useHistory.record
+  // has (fire-and-forget) just POSTed this run to the server — wait one tick
+  // to catch it in the list.
+  useEffect(() => {
+    if (!user || !currentProject) {
+      setProjectRuns([]);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const runs = await listRuns(currentProject.id);
+        if (!cancelled) setProjectRuns(runs);
+      } catch {
+        if (!cancelled) setProjectRuns([]);
+      }
+    };
+    void load();
+    // Retry once after a short delay to pick up a fresh mirror POST.
+    const t = setTimeout(() => void load(), 1500);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [user, currentProject, jobData.job_id]);
 
   // Find the matching history entry by job id so we know if we can persist.
   const matchingEntry = entries.find(e => e.id === jobData.job_id);
@@ -121,6 +159,15 @@ export default function ResultsView({
           <NextSteps zScores={jobData.z_scores} frictionScore={jobData.friction_score} />
         </div>
       </section>
+
+      {currentProject && projectRuns.length > 0 && (
+        <ProjectRankCard
+          projectName={currentProject.name}
+          runs={projectRuns}
+          currentJobId={jobData.job_id}
+          onOpenRun={onOpenRun}
+        />
+      )}
 
       {/* Inline note: existing preview, edit form, or "add" affordance. */}
       {(note || editingNote || canPersistNote) && (

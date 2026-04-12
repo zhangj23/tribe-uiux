@@ -3,8 +3,9 @@ import shutil
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 
+from app.auth import CurrentUser, get_optional_user
 from app.config import settings
 from app.models.schemas import UploadResponse
 from app.services.job_manager import create_job, submit_pipeline
@@ -41,7 +42,13 @@ def _classify_media(filename: str) -> str:
 
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    user: CurrentUser | None = Depends(get_optional_user),
+):
+    if settings.auth_required and user is None:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     media_type = _classify_media(file.filename)
 
     # Save uploaded file with sanitized name
@@ -50,7 +57,11 @@ async def upload_file(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
 
     # Create job and start processing pipeline
-    job = create_job(media_type=media_type, input_path=save_path)
+    job = create_job(
+        media_type=media_type,
+        input_path=save_path,
+        owner_id=user.id if user else None,
+    )
     submit_pipeline(job, run_pipeline)
 
     return UploadResponse(job_id=job.id)

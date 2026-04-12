@@ -1,10 +1,20 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
 
 from app.config import settings
-from app.routers import upload, jobs, health, analyze_url, compare
+from app.routers import (
+    analyze_url,
+    compare,
+    health,
+    jobs,
+    projects,
+    runs,
+    upload,
+)
 
 
 class CachedStaticFiles(StaticFiles):
@@ -37,9 +47,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_cors_origins = [
+    origin.strip()
+    for origin in (settings.cors_origins or "").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins or ["http://localhost:3000"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -52,14 +69,25 @@ app.include_router(upload.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(analyze_url.router, prefix="/api")
 app.include_router(compare.router, prefix="/api")
+app.include_router(projects.router, prefix="/api")
+app.include_router(runs.router, prefix="/api")
 
-# Serve frontend static files with Cache-Control headers
-app.mount("/css", CachedStaticFiles(directory=str(settings.frontend_dir / "css")), name="css")
-app.mount("/js", CachedStaticFiles(directory=str(settings.frontend_dir / "js")), name="js")
-app.mount("/assets", CachedStaticFiles(directory=str(settings.frontend_dir / "assets")), name="assets")
+# Serve legacy frontend static files (only when the directory exists — it won't
+# in the Docker container when the Next.js frontend is the primary UI).
+_frontend_dir = settings.frontend_dir
+if _frontend_dir.is_dir():
+    for sub in ("css", "js", "assets"):
+        sub_dir = _frontend_dir / sub
+        if sub_dir.is_dir():
+            app.mount(f"/{sub}", CachedStaticFiles(directory=str(sub_dir)), name=sub)
 
-
-# Catch-all: serve index.html for the root and any non-API path
-@app.get("/")
-async def serve_index():
-    return FileResponse(str(settings.frontend_dir / "index.html"))
+    @app.get("/")
+    async def serve_index():
+        index = _frontend_dir / "index.html"
+        if index.is_file():
+            return FileResponse(str(index))
+        return {"detail": "Frontend not mounted — use the Next.js app on port 3000"}
+else:
+    @app.get("/")
+    async def serve_index():
+        return {"detail": "API-only mode — use the Next.js frontend on port 3000"}
