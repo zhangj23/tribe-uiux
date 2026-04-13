@@ -1014,12 +1014,153 @@ button.header-left.header-left--link:focus-visible {
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
 }
 
-.results-hero-score { display: flex; flex-direction: column; justify-content: center; }
+.results-hero-score { display: flex; flex-direction: column; justify-content: center; gap: var(--space-md); }
 .results-hero-score .friction-score-display {
   margin-bottom: 0;
   background: transparent;
   border: none;
   padding: 0;
+}
+
+/* "When it happened" sits as a tiny caption inside the friction score card —
+   no divider, same visual block as the score itself. */
+.results-hero-when {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: var(--space-xs, 4px);
+}
+.results-hero-when-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.results-hero-when-value {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ============ RESULTS TOP ROW ============
+   Compact 3-column row that sits above everything else on the analysis page.
+   Columns: friction score + timestamp | AI summary | what to change next.
+   Capped width so nothing stretches edge-to-edge. */
+.results-top {
+  max-width: 1280px;
+  margin: 0 auto var(--space-lg);
+  padding: var(--space-lg) var(--space-lg) 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+.results-top-card {
+  background: linear-gradient(180deg, var(--bg-raised) 0%, var(--bg) 100%);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.results-top-card--score {
+  gap: 0;
+  padding: var(--space-md);
+}
+.results-top-card--score .friction-score-display {
+  margin-bottom: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+.results-top-card--score .friction-number {
+  font-size: 2.6rem;
+  line-height: 1;
+  text-align: center;
+}
+.results-top-card--score .friction-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+.results-top-card--score .friction-verdict {
+  font-size: 0.82rem;
+  text-align: center;
+}
+.results-top-card--score .friction-scale { margin: 4px 0; }
+.results-top-card--score .friction-hint {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.results-top-card--summary .panel-header {
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+.results-top-card--summary,
+.results-top-card--next {
+  max-height: 420px;
+  overflow-y: auto;
+}
+.results-top-card--summary .analysis-text { font-size: 0.86rem; line-height: 1.6; }
+.results-top-card--next .next-step { padding: var(--space-sm) var(--space-md); }
+.results-top-card--next .next-step-detail { font-size: 0.78rem; }
+
+@media (max-width: 1100px) {
+  .results-top { grid-template-columns: 1fr 1fr; }
+  .results-top-card--summary { grid-column: 1 / -1; order: 2; }
+  .results-top-card--next { order: 3; }
+}
+@media (max-width: 720px) {
+  .results-top {
+    grid-template-columns: 1fr;
+    padding: var(--space-md) var(--space-md) 0;
+  }
+  .results-top-card--summary,
+  .results-top-card--next { grid-column: auto; }
+}
+
+/* ============ DEEP DIVE — brain map + neural metrics ============
+   Matches the notes box width exactly (same 1280 − 2·space-lg cap). */
+.results-deep-dive {
+  max-width: calc(1280px - 2 * var(--space-lg));
+  margin: 0 auto var(--space-lg);
+  box-sizing: border-box;
+}
+.results-deep-dive-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.results-deep-dive-body .results-grid {
+  max-width: none;
+  min-height: 0;
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+@media (max-width: 1280px) {
+  .results-deep-dive {
+    max-width: none;
+    margin-left: var(--space-lg);
+    margin-right: var(--space-lg);
+  }
+}
+@media (max-width: 720px) {
+  .results-deep-dive { margin-left: var(--space-md); margin-right: var(--space-md); }
 }
 
 .results-hero-actions {
@@ -1143,16 +1284,27 @@ button.header-left.header-left--link:focus-visible {
 
 /* ===== Results page note (when opened from a stored history entry) ===== */
 .results-entry-note {
-  max-width: 1600px;
+  max-width: calc(1280px - 2 * var(--space-lg));
   margin: 0 auto var(--space-md);
-  padding: var(--space-md) var(--space-xl);
+  padding: var(--space-md) var(--space-lg);
   background: var(--bg-raised);
   border: var(--border);
   border-left: 3px solid var(--phosphor);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-sizing: border-box;
+}
+@media (max-width: 1280px) {
+  .results-entry-note {
+    max-width: none;
+    margin-left: var(--space-lg);
+    margin-right: var(--space-lg);
+  }
+}
+@media (max-width: 720px) {
+  .results-entry-note { margin-left: var(--space-md); margin-right: var(--space-md); padding: var(--space-sm) var(--space-md); }
 }
 
 .results-entry-note-eyebrow {
@@ -1165,6 +1317,21 @@ button.header-left.header-left--link:focus-visible {
 
 .results-entry-note.is-empty {
   border-left-color: var(--dim);
+}
+
+/* Narrow variant — compact, centered, doesn't stretch across the screen. */
+.results-entry-note--narrow {
+  width: 100%;
+  max-width: 560px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.82rem;
+}
+@media (max-width: 640px) {
+  .results-entry-note--narrow {
+    max-width: calc(100% - 2 * var(--space-md));
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .results-entry-note.is-editing {
@@ -1401,6 +1568,12 @@ button.header-left.header-left--link:focus-visible {
   min-height: calc(100vh - 120px);
   max-width: 1600px;
   margin: 0 auto;
+}
+
+/* Analysis narrative is no longer in the grid — leaves brain + metrics. */
+.results-grid--split {
+  grid-template-columns: minmax(320px, 420px) 1fr;
+  min-height: 0;
 }
 
 .panel {

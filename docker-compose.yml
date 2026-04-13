@@ -34,6 +34,10 @@ services:
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
       # Drive the frontend gate from the same single AUTH_REQUIRED flag.
       - NEXT_PUBLIC_AUTH_REQUIRED=${AUTH_REQUIRED:-false}
+      # Enable polling for file watching — native inotify doesn't fire
+      # reliably across Windows host → Linux container volume mounts.
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     volumes:
       - ./frontend-next/src:/app/src
     depends_on:
