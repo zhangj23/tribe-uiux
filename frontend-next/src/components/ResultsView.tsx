@@ -96,6 +96,17 @@ export default function ResultsView({
   // Find the matching history entry by job id so we know if we can persist.
   const matchingEntry = entries.find(e => e.id === jobData.job_id);
   const canPersistNote = !!matchingEntry;
+  const savedAt = matchingEntry?.savedAt;
+  const whenText = (() => {
+    const t = savedAt ?? Date.now();
+    const d = new Date(t);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (sameDay) return `Today · ${time}`;
+    const date = d.toLocaleDateString([], { month: 'short', day: 'numeric', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+    return `${date} · ${time}`;
+  })();
   // We can only seed Compare with this analysis if there's at least one *other*
   // entry to compare against. Otherwise the action would dead-end immediately.
   const canCompareWith = !!onCompareWith && !!matchingEntry &&
@@ -150,12 +161,27 @@ export default function ResultsView({
         </div>
       </div>
 
-      {/* Hero: Friction Score + Next Steps */}
-      <section className="results-hero">
-        <div className="results-hero-score">
+      {/* Top row: Friction + timestamp | AI Summary | What to change next */}
+      <section className="results-top">
+        <div className="results-top-card results-top-card--score">
+          <div className="results-hero-when" aria-label="When this analysis ran">
+            <span className="results-hero-when-eyebrow">Analyzed</span>
+            <span className="results-hero-when-value">{whenText}</span>
+          </div>
           <FrictionScore score={jobData.friction_score} />
         </div>
-        <div className="results-hero-actions">
+
+        {jobData.llm_analysis && (
+          <div className="results-top-card results-top-card--summary">
+            <div className="panel-header">
+              <h3>AI Summary</h3>
+              <span className="panel-badge">Claude</span>
+            </div>
+            <AnalysisText text={jobData.llm_analysis} />
+          </div>
+        )}
+
+        <div className="results-top-card results-top-card--next">
           <NextSteps zScores={jobData.z_scores} frictionScore={jobData.friction_score} />
         </div>
       </section>
@@ -229,10 +255,11 @@ export default function ResultsView({
         </aside>
       )}
 
-      <SpikeTimeline timeseries={jobData.timeseries} timestamps={jobData.timestamps} />
-
       {!compact && (
-        <div className="results-grid">
+        <section className="results-deep-dive">
+          <div className="results-deep-dive-body">
+            <SpikeTimeline timeseries={jobData.timeseries} timestamps={jobData.timestamps} />
+            <div className="results-grid results-grid--split">
           {/* Left: Brain panel */}
           <div className="panel panel--brain">
             <div className="panel-header">
@@ -289,15 +316,9 @@ export default function ResultsView({
             </div>
           </div>
 
-          {/* Right: Analysis panel */}
-          <div className="panel panel--analysis">
-            <div className="panel-header">
-              <h3>AI Analysis</h3>
-              <span className="panel-badge">Claude</span>
             </div>
-            <AnalysisText text={jobData.llm_analysis} />
           </div>
-        </div>
+        </section>
       )}
     </div>
   );
